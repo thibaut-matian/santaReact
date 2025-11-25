@@ -104,6 +104,13 @@
       "email": "medhi@test.com",
       "password": "test",
       "role": "user"
+    },
+    {
+      "id": "f533",
+      "name": "Mila ",
+      "email": "mila@santa.com",
+      "password": "test",
+      "role": "moderator"
     }
   ],
   "groups": [
@@ -128,6 +135,13 @@
       "moderatorId": "df69",
       "status": "drawn",
       "isDrawDone": true
+    },
+    {
+      "id": "a1e7",
+      "name": "event bucado ",
+      "moderatorId": "f533",
+      "status": "open",
+      "isDrawDone": false
     }
   ],
   "participants": [
@@ -167,13 +181,6 @@
       "gifteeId": "a2c4"
     },
     {
-      "id": "f47e",
-      "userId": null,
-      "groupId": 7824,
-      "status": "approved",
-      "gifteeId": "cb41"
-    },
-    {
       "id": "f8b4",
       "userId": "5da3",
       "groupId": 7824,
@@ -186,34 +193,6 @@
       "groupId": 7824,
       "status": "approved",
       "gifteeId": null
-    },
-    {
-      "id": "141a",
-      "userId": "a248",
-      "groupId": null,
-      "status": "approved",
-      "gifteeId": "3201"
-    },
-    {
-      "id": "59fc",
-      "userId": "6efb",
-      "groupId": null,
-      "status": "approved",
-      "gifteeId": "96d8"
-    },
-    {
-      "id": "42f9",
-      "userId": "3201",
-      "groupId": null,
-      "status": "approved",
-      "gifteeId": "a248"
-    },
-    {
-      "id": "e5ec",
-      "userId": "96d8",
-      "groupId": null,
-      "status": "approved",
-      "gifteeId": "6efb"
     }
   ]
 }

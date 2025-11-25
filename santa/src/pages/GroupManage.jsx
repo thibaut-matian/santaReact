@@ -15,15 +15,24 @@ const GroupManage = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                // 1. On charge le groupe
+                // 1. Charger le groupe
                 const groupRes = await api.get(`/groups/${groupId}`);
                 setGroup(groupRes.data);
 
-                // 2. On charge les participants
+                // 2. Charger SEULEMENT les participants de CE groupe
                 const partsRes = await api.get(`/participants?groupId=${groupId}`);
-                const participantsData = partsRes.data;
+                let participantsData = partsRes.data;
 
-                // 3. On récupère manuellement les infos des utilisateurs
+                // SÉCURITÉ : Filtrer côté client aussi pour éviter les participants orphelins
+                participantsData = participantsData.filter(p => 
+                    p.groupId && 
+                    p.groupId.toString() === groupId.toString() &&
+                    p.userId // Vérifier que userId existe aussi
+                );
+
+                console.log('Participants filtrés pour le groupe', groupId, ':', participantsData);
+
+                // 3. Récupérer les infos des utilisateurs
                 const participantsWithUsers = await Promise.all(
                     participantsData.map(async (participant) => {
                         try {
@@ -36,7 +45,7 @@ const GroupManage = () => {
                             console.error(`Erreur chargement user ${participant.userId}:`, error);
                             return {
                                 ...participant,
-                                user: null
+                                user: { name: 'Utilisateur introuvable', email: 'N/A' }
                             };
                         }
                     })
