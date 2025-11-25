@@ -3,12 +3,13 @@ import { useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 
 const GroupManage = () => {
-    const { groupId } = useParams(); // On récupère l'ID du groupe dans l'URL
+    const { groupId } = useParams();
     const navigate = useNavigate();
 
     const [group, setGroup] = useState(null);
     const [participants, setParticipants] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [drawLoading, setDrawLoading] = useState(false);
 
     // Charger les infos du groupe et les participants
     useEffect(() => {
@@ -70,6 +71,71 @@ const GroupManage = () => {
             }
         } catch (error) {
             alert("Erreur lors de la mise à jour");
+        }
+    };
+
+    // Fonction pour lancer le tirage au sort
+    const handleDraw = async () => {
+        if (approved.length < 2) {
+            alert("Il faut au moins 2 participants pour faire un tirage !");
+            return;
+        }
+
+        if (!window.confirm(`Lancer le tirage au sort pour ${approved.length} participants ?`)) {
+            return;
+        }
+
+        setDrawLoading(true);
+
+        try {
+            // 1. Créer une liste des IDs des participants
+            const participantIds = approved.map(p => p.userId);
+            
+            // 2. Mélanger la liste (algorithme de Fisher-Yates)
+            const shuffled = [...participantIds];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+
+            // 3. Assigner chaque participant à celui d'après (le dernier donne au premier)
+            const assignments = [];
+            for (let i = 0; i < participantIds.length; i++) {
+                const giverId = participantIds[i];
+                const receiverId = shuffled[(i + 1) % shuffled.length]; // Le % permet de revenir au début
+                
+                assignments.push({
+                    giverId,
+                    receiverId
+                });
+            }
+
+            // 4. Mettre à jour chaque participant avec son destinataire
+            await Promise.all(
+                assignments.map(({ giverId, receiverId }) => {
+                    const participant = approved.find(p => p.userId === giverId);
+                    return api.patch(`/participants/${participant.id}`, {
+                        gifteeId: receiverId
+                    });
+                })
+            );
+
+            // 5. Marquer le groupe comme "tirage effectué"
+            await api.patch(`/groups/${groupId}`, {
+                isDrawDone: true,
+                status: 'drawn'
+            });
+
+            // 6. Recharger les données
+            window.location.reload(); // Solution simple, ou refetch les données
+            
+            alert(`🎁 Tirage au sort terminé ! ${approved.length} participants ont reçu leur assignation.`);
+
+        } catch (error) {
+            console.error("Erreur lors du tirage:", error);
+            alert("Erreur lors du tirage au sort. Réessayez.");
+        } finally {
+            setDrawLoading(false);
         }
     };
 
@@ -142,14 +208,31 @@ const GroupManage = () => {
                         <h2 className="text-2xl font-bold text-green-200 flex items-center gap-2">
                             ✅ Participants validés ({approved.length})
                         </h2>
-                        {/* BOUTON DE TIRAGE AU SORT (Désactivé si pas assez de monde) */}
+                        
+                        {/* BOUTON DE TIRAGE AU SORT avec la fonction onClick */}
                         <button
+                            onClick={handleDraw}
                             className="btn btn-primary bg-gradient-to-r from-red-500 to-red-700 border-none shadow-lg text-white"
-                            disabled={approved.length < 2}
+                            disabled={approved.length < 2 || drawLoading || group?.isDrawDone}
                         >
-                            🎁 Lancer le tirage au sort !
+                            {drawLoading ? (
+                                <>🔄 Tirage en cours...</>
+                            ) : group?.isDrawDone ? (
+                                <>✅ Tirage effectué</>
+                            ) : (
+                                <>🎁 Lancer le tirage au sort !</>
+                            )}
                         </button>
                     </div>
+
+                    {/* Affichage si le tirage est déjà fait */}
+                    {group?.isDrawDone && (
+                        <div className="bg-green-500/20 border border-green-500/30 rounded-lg p-4 mb-4">
+                            <p className="text-green-200 font-semibold">
+                                🎉 Le tirage au sort a été effectué ! Les participants peuvent maintenant voir leur destinataire.
+                            </p>
+                        </div>
+                    )}
 
                     <div className="overflow-x-auto">
                         <table className="table text-white w-full">
@@ -158,6 +241,7 @@ const GroupManage = () => {
                                     <th>Nom</th>
                                     <th>Email</th>
                                     <th>Statut</th>
+                                    {group?.isDrawDone && <th>Destinataire</th>}
                                 </tr>
                             </thead>
                             <tbody>
@@ -166,6 +250,15 @@ const GroupManage = () => {
                                         <td className="font-bold">{p.user?.name}</td>
                                         <td>{p.user?.email}</td>
                                         <td><span className="badge badge-success gap-2">Validé</span></td>
+                                        {group?.isDrawDone && (
+                                            <td>
+                                                {p.gifteeId ? (
+                                                    <span className="text-green-400">🎁 Assigné</span>
+                                                ) : (
+                                                    <span className="text-gray-400">En attente...</span>
+                                                )}
+                                            </td>
+                                        )}
                                     </tr>
                                 ))}
                             </tbody>

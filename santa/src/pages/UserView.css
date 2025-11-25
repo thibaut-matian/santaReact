@@ -1,0 +1,69 @@
+/* src/pages/UserView.css */
+
+/* Fond sombre pour faire ressortir la magie */
+.christmas-bg {
+  background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+  min-height: 100vh;
+  overflow: hidden;
+  position: relative;
+  color: white;
+}
+
+/* --- NEIGE --- */
+.snowflake {
+  color: #fff;
+  font-size: 1.5em;
+  font-family: Arial;
+  position: fixed;
+  top: -10%;
+  z-index: 0;
+  animation: fall linear infinite;
+}
+
+@keyframes fall {
+  0% { top: -10%; transform: translateX(0px); opacity: 1;}
+  100% { top: 110%; transform: translateX(50px); opacity: 0.3;}
+}
+
+/* On crée des variations pour que ce soit naturel */
+.snowflake:nth-child(1) { left: 10%; animation-duration: 10s; animation-delay: 0s; }
+.snowflake:nth-child(2) { left: 20%; animation-duration: 15s; animation-delay: 1s; }
+.snowflake:nth-child(3) { left: 30%; animation-duration: 8s; animation-delay: 2s; }
+.snowflake:nth-child(4) { left: 50%; animation-duration: 12s; animation-delay: 0s; }
+.snowflake:nth-child(5) { left: 70%; animation-duration: 9s; animation-delay: 3s; }
+.snowflake:nth-child(6) { left: 85%; animation-duration: 11s; animation-delay: 1s; }
+.snowflake:nth-child(7) { left: 95%; animation-duration: 14s; animation-delay: 2s; }
+
+/* --- BOITE CADEAU --- */
+.gift-container {
+  cursor: pointer;
+  transition: transform 0.3s;
+}
+
+.gift-container:hover {
+  transform: scale(1.05);
+}
+
+/* Animation de tremblement (Shake) */
+@keyframes shake {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(5deg); }
+  50% { transform: rotate(0deg); }
+  75% { transform: rotate(-5deg); }
+  100% { transform: rotate(0deg); }
+}
+
+.shake-it {
+  animation: shake 0.5s infinite;
+}
+
+/* Animation d'apparition du résultat */
+@keyframes pop-in {
+  0% { transform: scale(0); opacity: 0; }
+  80% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.result-card {
+  animation: pop-in 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+}

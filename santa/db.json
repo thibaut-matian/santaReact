@@ -1,58 +1,219 @@
 {
   "users": [
     {
-      "id": 1,
+      "id": "1",
       "email": "admin@santa.com",
       "password": "adminpassword",
       "name": "Super Admin",
       "role": "admin"
     },
     {
-      "id": 2,
+      "id": "2",
       "email": "modo@tech-company.com",
       "password": "modopassword",
       "name": "Marc (Chef de projet)",
       "role": "moderator"
     },
     {
-      "id": 3,
+      "id": "3",
       "email": "alice@tech-company.com",
       "password": "userpassword",
       "name": "Alice",
       "role": "user"
     },
     {
-      "id": 4,
+      "id": "4",
       "email": "bob@tech-company.com",
       "password": "userpassword",
       "name": "Bob",
+      "role": "user"
+    },
+    {
+      "id": "c093",
+      "name": "Thibaut",
+      "email": "thibaut@test.com",
+      "password": "modopassword",
+      "role": "moderator"
+    },
+    {
+      "id": "f44b",
+      "name": "vero",
+      "email": "vero@test.com",
+      "password": "verotest",
+      "role": "user"
+    },
+    {
+      "id": "cb41",
+      "name": "James",
+      "email": "james@test.com",
+      "password": "jamestest",
+      "role": "user"
+    },
+    {
+      "id": "8cc9",
+      "name": "Wendy",
+      "email": "wendy@test.com",
+      "password": "testwendy",
+      "role": "user"
+    },
+    {
+      "id": "5da3",
+      "name": "Pharrel",
+      "email": "pharrel@test.com",
+      "password": "pharrel",
+      "role": "user"
+    },
+    {
+      "id": "8f41",
+      "name": "Anziz",
+      "email": "anziz@test.com",
+      "password": "anziz",
+      "role": "user"
+    },
+    {
+      "id": "df69",
+      "name": "Anziz",
+      "email": "anziz@test.com",
+      "password": "anziztest",
+      "role": "moderator"
+    },
+    {
+      "id": "a248",
+      "name": "JeanLuc ",
+      "email": "jeanluc@test.com",
+      "password": "test",
+      "role": "user"
+    },
+    {
+      "id": "6efb",
+      "name": "James",
+      "email": "james@test.com",
+      "password": "test",
+      "role": "user"
+    },
+    {
+      "id": "3201",
+      "name": "Enzo",
+      "email": "enzo@test.com",
+      "password": "test",
+      "role": "user"
+    },
+    {
+      "id": "96d8",
+      "name": "medhi",
+      "email": "medhi@test.com",
+      "password": "test",
       "role": "user"
     }
   ],
   "groups": [
     {
-      "id": 101,
+      "id": "101",
       "name": "Noël Tech Company 2024",
       "moderatorId": 2,
       "status": "open",
       "drawDate": "2024-12-20",
       "isDrawDone": false
+    },
+    {
+      "id": "7824",
+      "name": "Noel Du CDPI ",
+      "moderatorId": "c093",
+      "status": "drawn",
+      "isDrawDone": true
+    },
+    {
+      "id": "19ae",
+      "name": "Noel 2025",
+      "moderatorId": "df69",
+      "status": "drawn",
+      "isDrawDone": true
     }
   ],
   "participants": [
     {
-      "id": 501,
+      "id": "501",
       "userId": 3,
       "groupId": 101,
       "status": "approved",
       "gifteeId": null
     },
     {
-      "id": 502,
+      "id": "502",
       "userId": 4,
       "groupId": 101,
-      "status": "pending",
+      "status": "approved",
       "gifteeId": null
+    },
+    {
+      "id": "82ef",
+      "userId": "f44b",
+      "groupId": 7824,
+      "status": "approved",
+      "gifteeId": "f44b"
+    },
+    {
+      "id": "4df5",
+      "userId": "cb41",
+      "groupId": 7824,
+      "status": "approved",
+      "gifteeId": "8cc9"
+    },
+    {
+      "id": "803d",
+      "userId": "8cc9",
+      "groupId": 7824,
+      "status": "approved",
+      "gifteeId": "a2c4"
+    },
+    {
+      "id": "f47e",
+      "userId": null,
+      "groupId": 7824,
+      "status": "approved",
+      "gifteeId": "cb41"
+    },
+    {
+      "id": "f8b4",
+      "userId": "5da3",
+      "groupId": 7824,
+      "status": "approved",
+      "gifteeId": null
+    },
+    {
+      "id": "1ec7",
+      "userId": "8f41",
+      "groupId": 7824,
+      "status": "approved",
+      "gifteeId": null
+    },
+    {
+      "id": "141a",
+      "userId": "a248",
+      "groupId": null,
+      "status": "approved",
+      "gifteeId": "3201"
+    },
+    {
+      "id": "59fc",
+      "userId": "6efb",
+      "groupId": null,
+      "status": "approved",
+      "gifteeId": "96d8"
+    },
+    {
+      "id": "42f9",
+      "userId": "3201",
+      "groupId": null,
+      "status": "approved",
+      "gifteeId": "a248"
+    },
+    {
+      "id": "e5ec",
+      "userId": "96d8",
+      "groupId": null,
+      "status": "approved",
+      "gifteeId": "6efb"
     }
   ]
 }

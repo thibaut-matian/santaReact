@@ -3,22 +3,8 @@ import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import AdminDashboard from './pages/AdminDashboard';
 import GroupManage from './pages/GroupManage';
-
-// --- COMPOSANTS TEMPORAIRES (On les déplacera plus tard dans src/pages) ---
-
-
-
-
-
-
-
-// 4. Vue Utilisateur (Inscription ou Résultat)
-const UserView = () => (
-  <div style={{ padding: '20px' }}>
-    <h2> Mon Secret Santa</h2>
-    <p>Ici : Statut de mon inscription ou révélation du binôme.</p>
-  </div>
-);
+import UserView from './pages/UserView';
+import RegisterPage from './pages/RegisterPage';
 
 // --- CONFIGURATION DU ROUTEUR ---
 
@@ -37,6 +23,8 @@ function App() {
 
         {/* Routes Utilisateur (Vue d'un groupe pour s'inscrire) */}
         <Route path="/group/:groupId" element={<UserView />} />
+
+        <Route path="/register" element={<RegisterPage />} /> 
       </Routes>
     </Router>
   );

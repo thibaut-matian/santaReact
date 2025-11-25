@@ -1,9 +1,8 @@
-// src/pages/LoginPage.js
+// src/pages/LoginPage.jsx
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { loginUser } from '../services/api.jsx';
-
-// IMPORTANT : On importe le CSS ici
+import api from '../services/api'; // Ajout pour récupérer le groupe du modo
 import './LoginPage.css'; 
 
 const LoginPage = () => {
@@ -26,9 +25,35 @@ const LoginPage = () => {
         if (user.role === 'admin') {
           navigate('/admin');
         } else if (user.role === 'moderator') {
-          navigate('/group-manage/101'); 
+          // MODIFICATION ICI : On cherche le groupe de ce modérateur
+          try {
+            const groupsRes = await api.get(`/groups?moderatorId=${user.id}`);
+            if (groupsRes.data.length > 0) {
+              const myGroup = groupsRes.data[0]; // Son premier groupe
+              navigate(`/group-manage/${myGroup.id}`);
+            } else {
+              // Cas où le modo n'a pas encore de groupe (ne devrait pas arriver)
+              setError('Aucun groupe trouvé pour ce modérateur.');
+            }
+          } catch (err) {
+            console.error('Erreur recherche groupe:', err);
+            setError('Erreur lors de la recherche du groupe.');
+          }
         } else {
-          navigate('/group/101');
+          // Pour les utilisateurs normaux, on peut aussi chercher leur groupe
+          try {
+            const participantsRes = await api.get(`/participants?userId=${user.id}`);
+            if (participantsRes.data.length > 0) {
+              const myParticipation = participantsRes.data[0]; // Sa première participation
+              navigate(`/group/${myParticipation.groupId}`);
+            } else {
+              // L'utilisateur n'est dans aucun groupe encore
+              setError('Vous n\'êtes inscrit dans aucun groupe.');
+            }
+          } catch (err) {
+            console.error('Erreur recherche participation:', err);
+            navigate('/group/101'); // Fallback vers un groupe par défaut
+          }
         }
       } else {
         setError('Email ou mot de passe incorrect.');
@@ -39,17 +64,15 @@ const LoginPage = () => {
   };
 
   const handleButtonMouseEnter = () => {
-    // Si les champs ne sont pas remplis, on fait bouger le bouton
     if (!email.trim() || !password.trim()) {
-      const randomTop = Math.random() * 200 - 100; // Entre -100px et +100px
-      const randomLeft = Math.random() * 200 - 100; // Entre -100px et +100px
+      const randomTop = Math.random() * 200 - 100; 
+      const randomLeft = Math.random() * 200 - 100; 
       
       setButtonPosition({
         top: randomTop,
         left: randomLeft
       });
     } else {
-      // Si les champs sont remplis, on remet le bouton à sa place
       setButtonPosition({ top: 0, left: 0 });
     }
   };
@@ -102,11 +125,22 @@ const LoginPage = () => {
             fontSize: '12px', 
             color: '#666', 
             textAlign: 'center',
-            fontStyle: 'italic' 
+            fontStyle: 'italic',
+            marginBottom: '15px'
           }}>
             💡 Remplis les champs pour que le bouton arrête de fuir !
           </p>
         )}
+
+        <div style={{ borderTop: '1px solid #eee', paddingTop: '15px' }}>
+            <p style={{ fontSize: '14px', margin: 0 }}>
+            Pas encore de compte ? <br/>
+            <Link to="/register" style={{ color: '#d32f2f', fontWeight: 'bold', textDecoration: 'none' }}>
+                Créer un espace ou rejoindre
+            </Link>
+            </p>
+        </div>
+
       </div>
     </div>
   );
