@@ -1,0 +1,58 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "email": "admin@santa.com",
+      "password": "adminpassword",
+      "name": "Super Admin",
+      "role": "admin"
+    },
+    {
+      "id": 2,
+      "email": "modo@tech-company.com",
+      "password": "modopassword",
+      "name": "Marc (Chef de projet)",
+      "role": "moderator"
+    },
+    {
+      "id": 3,
+      "email": "alice@tech-company.com",
+      "password": "userpassword",
+      "name": "Alice",
+      "role": "user"
+    },
+    {
+      "id": 4,
+      "email": "bob@tech-company.com",
+      "password": "userpassword",
+      "name": "Bob",
+      "role": "user"
+    }
+  ],
+  "groups": [
+    {
+      "id": 101,
+      "name": "Noël Tech Company 2024",
+      "moderatorId": 2,
+      "status": "open",
+      "drawDate": "2024-12-20",
+      "isDrawDone": false
+    }
+  ],
+  "participants": [
+    {
+      "id": 501,
+      "userId": 3,
+      "groupId": 101,
+      "status": "approved",
+      "gifteeId": null
+    },
+    {
+      "id": 502,
+      "userId": 4,
+      "groupId": 101,
+      "status": "pending",
+      "gifteeId": null
+    }
+  ]
+}

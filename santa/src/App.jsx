@@ -1,35 +1,45 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import LoginPage from './pages/LoginPage';
+import AdminDashboard from './pages/AdminDashboard';
+import GroupManage from './pages/GroupManage';
+
+// --- COMPOSANTS TEMPORAIRES (On les déplacera plus tard dans src/pages) ---
+
+
+
+
+
+
+
+// 4. Vue Utilisateur (Inscription ou Résultat)
+const UserView = () => (
+  <div style={{ padding: '20px' }}>
+    <h2> Mon Secret Santa</h2>
+    <p>Ici : Statut de mon inscription ou révélation du binôme.</p>
+  </div>
+);
+
+// --- CONFIGURATION DU ROUTEUR ---
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <Router>
+      <Routes>
+        {/* Route publique : Accueil / Login */}
+        <Route path="/" element={<LoginPage />} />
+
+        {/* Routes Admin */}
+        <Route path="/admin" element={<AdminDashboard />} />
+
+        {/* Routes Modérateur (Gestion d'un groupe spécifique par son ID) */}
+        <Route path="/group-manage/:groupId" element={<GroupManage />} />
+
+        {/* Routes Utilisateur (Vue d'un groupe pour s'inscrire) */}
+        <Route path="/group/:groupId" element={<UserView />} />
+      </Routes>
+    </Router>
+  );
 }
 
-export default App
+export default App;
