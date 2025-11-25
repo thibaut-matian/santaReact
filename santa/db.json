@@ -36,81 +36,39 @@
       "role": "moderator"
     },
     {
-      "id": "f44b",
-      "name": "vero",
-      "email": "vero@test.com",
-      "password": "verotest",
-      "role": "user"
-    },
-    {
-      "id": "cb41",
-      "name": "James",
-      "email": "james@test.com",
-      "password": "jamestest",
-      "role": "user"
-    },
-    {
-      "id": "8cc9",
-      "name": "Wendy",
-      "email": "wendy@test.com",
-      "password": "testwendy",
-      "role": "user"
-    },
-    {
-      "id": "5da3",
-      "name": "Pharrel",
-      "email": "pharrel@test.com",
-      "password": "pharrel",
-      "role": "user"
-    },
-    {
-      "id": "8f41",
-      "name": "Anziz",
-      "email": "anziz@test.com",
-      "password": "anziz",
-      "role": "user"
-    },
-    {
-      "id": "df69",
-      "name": "Anziz",
-      "email": "anziz@test.com",
-      "password": "anziztest",
-      "role": "moderator"
-    },
-    {
-      "id": "a248",
-      "name": "JeanLuc ",
-      "email": "jeanluc@test.com",
-      "password": "test",
-      "role": "user"
-    },
-    {
-      "id": "6efb",
-      "name": "James",
-      "email": "james@test.com",
-      "password": "test",
-      "role": "user"
-    },
-    {
-      "id": "3201",
-      "name": "Enzo",
-      "email": "enzo@test.com",
-      "password": "test",
-      "role": "user"
-    },
-    {
-      "id": "96d8",
-      "name": "medhi",
-      "email": "medhi@test.com",
-      "password": "test",
-      "role": "user"
-    },
-    {
-      "id": "f533",
-      "name": "Mila ",
+      "id": "3389",
+      "name": "Mila",
       "email": "mila@santa.com",
       "password": "test",
       "role": "moderator"
+    },
+    {
+      "id": "e75e",
+      "name": "dany",
+      "email": "dany@santa.com",
+      "password": "test",
+      "role": "user"
+    },
+    {
+      "id": "66de",
+      "name": "alin",
+      "email": "alain@santa.com",
+      "password": "test",
+      "role": "user"
+    },
+    {
+      "id": "1ff1",
+      "name": "charlie",
+      "email": "charlie@santa.com",
+      "password": "test",
+      "role": "user"
+    },
+    {
+      "id": "89b9",
+      "name": "mila",
+      "email": "mila@test.com",
+      "password": "test",
+      "role": "user"
     }
   ],
   "groups": [
@@ -124,24 +82,17 @@
     },
     {
       "id": "7824",
-      "name": "Noel Du CDPI ",
+      "name": "Noel Du CDPI",
       "moderatorId": "c093",
-      "status": "drawn",
-      "isDrawDone": true
-    },
-    {
-      "id": "19ae",
-      "name": "Noel 2025",
-      "moderatorId": "df69",
-      "status": "drawn",
-      "isDrawDone": true
-    },
-    {
-      "id": "a1e7",
-      "name": "event bucado ",
-      "moderatorId": "f533",
       "status": "open",
       "isDrawDone": false
+    },
+    {
+      "id": "96ad",
+      "name": "Event Bucado",
+      "moderatorId": "3389",
+      "status": "drawn",
+      "isDrawDone": true
     }
   ],
   "participants": [
@@ -160,39 +111,32 @@
       "gifteeId": null
     },
     {
-      "id": "82ef",
-      "userId": "f44b",
-      "groupId": 7824,
+      "id": "021c",
+      "userId": "e75e",
+      "groupId": "96ad",
       "status": "approved",
-      "gifteeId": "f44b"
+      "gifteeId": "89b9"
     },
     {
-      "id": "4df5",
-      "userId": "cb41",
-      "groupId": 7824,
+      "id": "0d65",
+      "userId": "66de",
+      "groupId": "96ad",
       "status": "approved",
-      "gifteeId": "8cc9"
+      "gifteeId": "e75e"
     },
     {
-      "id": "803d",
-      "userId": "8cc9",
-      "groupId": 7824,
+      "id": "7ea9",
+      "userId": "1ff1",
+      "groupId": "96ad",
       "status": "approved",
-      "gifteeId": "a2c4"
+      "gifteeId": "66de"
     },
     {
-      "id": "f8b4",
-      "userId": "5da3",
-      "groupId": 7824,
+      "id": "5226",
+      "userId": "89b9",
+      "groupId": "96ad",
       "status": "approved",
-      "gifteeId": null
-    },
-    {
-      "id": "1ec7",
-      "userId": "8f41",
-      "groupId": 7824,
-      "status": "approved",
-      "gifteeId": null
+      "gifteeId": "1ff1"
     }
   ]
 }

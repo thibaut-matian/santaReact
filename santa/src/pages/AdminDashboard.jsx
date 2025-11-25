@@ -73,7 +73,7 @@ const AdminDashboard = () => {
 
   // Fonction utilitaire pour trouver les participants d'un groupe spécifique
   const getGroupMembers = (groupId) => {
-    return participants.filter(p => p.groupId === groupId);
+    return participants.filter(p => p.groupId == groupId);
   };
 
   if (loading) return <div className="text-center mt-20 text-white">Chargement du Dashboard...</div>;
