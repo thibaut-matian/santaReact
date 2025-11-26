@@ -83,11 +83,9 @@ const GroupManage = () => {
             } else if (newStatus === 'approved') {
                 console.log('✅ Validation participation:', participantId);
                 
-                // SOLUTION : Récupérer d'abord le participant complet
-                const participantResponse = await api.get(`/participants/${participantId}`);
-                const currentParticipant = participantResponse.data;
+                // SOLUTION : Utiliser PUT au lieu de PATCH
+                const currentParticipant = participants.find(p => p.id === participantId);
                 
-                // Ensuite faire un PUT avec toutes les données
                 const response = await api.put(`/participants/${participantId}`, {
                     ...currentParticipant,
                     status: newStatus
@@ -100,13 +98,11 @@ const GroupManage = () => {
                     p.id === participantId ? { ...p, status: newStatus } : p
                 ));
                 
-                alert('Participant validé avec succès !');
+                console.log('🎉 Participant validé avec succès !');
             }
         } catch (error) {
-            console.error('❌ ERREUR complète:', error);
-            console.error('📡 Status:', error.response?.status);
-            console.error('📊 Data:', error.response?.data);
-            alert(`Erreur réseau: ${error.message}`);
+            console.error('❌ ERREUR lors du changement de statut:', error);
+            alert(`Erreur: ${error.message}`);
         }
     };
 
@@ -153,14 +149,16 @@ const GroupManage = () => {
                 assignments.map(({ giverId, receiverId }) => {
                     const participant = approved.find(p => p.userId === giverId);
                     console.log(`🎁 ${giverId} -> ${receiverId}`);
-                    return api.patch(`/participants/${participant.id}`, {
+                    return api.put(`/participants/${participant.id}`, {
+                        ...participant,  // ← IMPORTANT : Garder toutes les propriétés
                         gifteeId: receiverId
                     });
                 })
             );
 
             // 5. Marquer le groupe comme "tirage effectué"
-            await api.patch(`/groups/${groupId}`, {
+            await api.put(`/groups/${groupId}`, {
+                ...group,  // ← IMPORTANT : Garder toutes les propriétés  
                 isDrawDone: true,
                 status: 'drawn'
             });
