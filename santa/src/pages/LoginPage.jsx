@@ -81,13 +81,13 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen text-slate-200 flex items-center justify-center px-4 bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-900">
+    <div className="min-h-screen text-slate-200 flex items-center justify-center px-4 bg-linear-to-br from-slate-900 via-slate-800 to-indigo-900">
       
       {/* Card principal avec effet liquid glass */}
       <div className="bg-slate-800/40 backdrop-blur-md border border-slate-700/50 shadow-2xl rounded-2xl p-8 max-w-md w-full relative overflow-hidden">
         
         {/* Effet de brillance liquide */}
-        <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent rounded-2xl pointer-events-none"></div>
+        <div className="absolute inset-0 bg-linear-to-br from-white/5 via-transparent to-transparent rounded-2xl pointer-events-none"></div>
         <div className="absolute top-0 left-1/4 w-32 h-32 bg-indigo-500/10 rounded-full blur-xl"></div>
         <div className="absolute bottom-0 right-1/4 w-24 h-24 bg-purple-500/10 rounded-full blur-xl"></div>
         
@@ -139,7 +139,7 @@ const LoginPage = () => {
                 className={`btn w-full backdrop-blur-sm border-red-500/30 shadow-lg text-white hover:from-red-400/80 hover:to-red-600/80 transition-all duration-300 ${
                   areLoginFieldsEmpty() 
                     ? 'bg-red-500' 
-                    : 'bg-gradient-to-r from-blue-500/80 to-blue-700/80'
+                    : 'bg-linear-to-r from-blue-500/80 to-blue-700/80'
                 }`}
                 onMouseOver={handleButtonMouseOver}
                 style={{
