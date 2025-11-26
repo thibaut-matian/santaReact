@@ -15,46 +15,60 @@ const UserView = () => {
   const [isOpened, setIsOpened] = useState(false); // Cadeau ouvert ou pas ?
 
   useEffect(() => {
-    if (!currentUser) {
-      navigate('/'); // Sécurité
-      return;
-    }
+    const fetchUserStatus = async () => {
+      if (!currentUser || !currentUser.id) {
+        navigate('/');
+        return;
+      }
 
-    const fetchData = async () => {
       try {
-        // 1. On cherche MA participation dans ce groupe
-        // Note : On utilise userId (sans guillemets si c'est des nombres dans ton json)
-        const res = await api.get(`/participants?groupId=${groupId}&userId=${currentUser.id}`);
+        console.log('🔍 Vérification statut utilisateur:', currentUser.id);
         
-        if (res.data.length === 0) {
-          alert("Tu n'es pas inscrit dans ce groupe !");
-          navigate('/');
+        // 1. Chercher ma participation
+        const participantsRes = await api.get(`/participants?userId=${currentUser.id}&groupId=${groupId}`);
+        
+        if (participantsRes.data.length === 0) {
+          setStatus('not_registered');
+          setLoading(false);
           return;
         }
 
-        const myData = res.data[0];
-
-        // 2. On détermine l'état
-        if (myData.status === 'pending') {
-          setStatus('pending');
-        } else if (myData.status === 'approved' && !myData.gifteeId) {
-          setStatus('waiting_draw'); // Validé mais pas encore de tirage
-        } else if (myData.gifteeId) {
-          setStatus('draw_done'); // Tirage fait !
-          
-          // 3. On va chercher le nom de la personne à qui offrir (Lazy loading)
-          const targetUser = await api.get(`/users/${myData.gifteeId}`);
-          setGifteeName(targetUser.data.name);
-        }
+        const myParticipation = participantsRes.data[0];
+        console.log('📊 Ma participation:', myParticipation);
         
+        // 2. Vérifier le statut
+        if (myParticipation.status === 'pending') {
+          console.log('⏳ En attente de validation');
+          setStatus('pending');
+        } else if (myParticipation.status === 'approved') {
+          // 3. Vérifier si j'ai une cible (tirage fait)
+          if (myParticipation.gifteeId) {
+            console.log('🎁 J\'ai une cible:', myParticipation.gifteeId);
+            
+            // Récupérer le nom de ma cible
+            const gifteeRes = await api.get(`/users/${myParticipation.gifteeId}`);
+            console.log('👤 Ma cible:', gifteeRes.data);
+            
+            setGifteeName(gifteeRes.data.name);
+            setStatus('draw_done');
+          } else {
+            console.log('✅ Validé mais pas de tirage encore');
+            setStatus('approved');
+          }
+        }
+
         setLoading(false);
       } catch (error) {
-        console.error(error);
+        console.error("❌ Erreur chargement statut:", error);
         setLoading(false);
       }
     };
 
-    fetchData();
+    fetchUserStatus();
+
+    // SOLUTION : Rechargement plus fréquent (toutes les 3 secondes)
+    const interval = setInterval(fetchUserStatus, 3000);
+    return () => clearInterval(interval);
   }, [groupId, currentUser, navigate]);
 
   const handleOpenGift = () => {

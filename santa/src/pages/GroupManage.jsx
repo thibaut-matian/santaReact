@@ -149,16 +149,14 @@ const GroupManage = () => {
                 assignments.map(({ giverId, receiverId }) => {
                     const participant = approved.find(p => p.userId === giverId);
                     console.log(`🎁 ${giverId} -> ${receiverId}`);
-                    return api.put(`/participants/${participant.id}`, {
-                        ...participant,  // ← IMPORTANT : Garder toutes les propriétés
+                    return api.patch(`/participants/${participant.id}`, {
                         gifteeId: receiverId
                     });
                 })
             );
 
             // 5. Marquer le groupe comme "tirage effectué"
-            await api.put(`/groups/${groupId}`, {
-                ...group,  // ← IMPORTANT : Garder toutes les propriétés  
+            await api.patch(`/groups/${groupId}`, {
                 isDrawDone: true,
                 status: 'drawn'
             });
