@@ -156,7 +156,7 @@ const GroupManage = () => {
             );
 
             // 5. Marquer le groupe comme "tirage effectué"
-            await api.patch(`/groups/${groupId}`, {
+            await api.put(`/groups/${groupId}`, {
                 isDrawDone: true,
                 status: 'drawn'
             });
