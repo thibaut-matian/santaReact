@@ -83,7 +83,7 @@ const GroupManage = () => {
             } else if (newStatus === 'approved') {
                 console.log('✅ Validation participation:', participantId);
                 
-                // SOLUTION : Utiliser PUT au lieu de PATCH
+                
                 const currentParticipant = participants.find(p => p.id === participantId);
                 
                 const response = await api.put(`/participants/${participantId}`, {
@@ -108,7 +108,10 @@ const GroupManage = () => {
 
     // Fonction pour lancer le tirage au sort
     const handleDraw = async () => {
+        // 1. Récupérer TOUS les participants validés (excluding pending)
         const approved = participants.filter(p => p.status === 'approved');
+        
+        console.log('👥 Participants validés:', approved.length);
         
         if (approved.length < 2) {
             alert("Il faut au moins 2 participants validés pour faire un tirage !");
@@ -120,53 +123,92 @@ const GroupManage = () => {
         }
 
         setDrawLoading(true);
-        console.log('🎲 Début du tirage au sort...');
 
         try {
-            // 1. Créer une liste des IDs des participants
-            const participantIds = approved.map(p => p.userId);
-            console.log('👥 IDs participants:', participantIds);
+            // 2. Remettre TOUS les gifteeId à null avant nouveau tirage
+            console.log('🔄 Remise à zéro des assignations...');
+            await Promise.all(
+                approved.map(participant => 
+                    api.put(`/participants/${participant.id}`, {
+                        ...participant,
+                        gifteeId: null
+                    })
+                )
+            );
+
+            // 3. Créer la liste des IDs utilisateur
+            const userIds = approved.map(p => p.userId);
+            console.log('📋 Liste des participants:', userIds);
             
-            // 2. Mélanger la liste
-            const shuffled = [...participantIds];
+            // 4. Mélanger la liste (Fisher-Yates)
+            const shuffled = [...userIds];
             for (let i = shuffled.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
             }
-            console.log('🔀 IDs mélangés:', shuffled);
+            console.log('🎲 Liste mélangée:', shuffled);
 
-            // 3. Assigner chaque participant à celui d'après
+            // 5. Créer les paires (chacun donne au suivant, le dernier au premier)
             const assignments = [];
-            for (let i = 0; i < participantIds.length; i++) {
-                const giverId = participantIds[i];
+            for (let i = 0; i < userIds.length; i++) {
+                const giverId = userIds[i];
                 const receiverId = shuffled[(i + 1) % shuffled.length];
+                
+                // SÉCURITÉ : Vérifier qu'on ne se donne pas à soi-même
+                if (giverId === receiverId) {
+                    console.error('❌ ERREUR: Une personne se donne à elle-même!');
+                    alert('Erreur dans le tirage - relancez le tirage');
+                    setDrawLoading(false);
+                    return;
+                }
+                
                 assignments.push({ giverId, receiverId });
             }
-            console.log('🎯 Assignations:', assignments);
+            
+            console.log('🎯 Assignations finales:', assignments);
 
-            // 4. Mettre à jour chaque participant
+            // 6. Vérification : chaque personne doit apparaître exactement une fois comme donneur et receveur
+            const givers = assignments.map(a => a.giverId).sort();
+            const receivers = assignments.map(a => a.receiverId).sort();
+            
+            console.log('🎁 Donneurs:', givers);
+            console.log('🎁 Receveurs:', receivers);
+            
+            if (givers.length !== receivers.length || givers.length !== userIds.length) {
+                console.error('❌ ERREUR: Nombre incorrect d\'assignations');
+                alert('Erreur dans le tirage - relancez le tirage');
+                setDrawLoading(false);
+                return;
+            }
+
+            // 7. Appliquer TOUTES les assignations
+            console.log('💾 Application des assignations...');
             await Promise.all(
-                assignments.map(({ giverId, receiverId }) => {
+                assignments.map(async ({ giverId, receiverId }) => {
                     const participant = approved.find(p => p.userId === giverId);
-                    console.log(`🎁 ${giverId} -> ${receiverId}`);
+                    console.log(`🎁 ${participant.user?.name} (${giverId}) → ${receiverId}`);
+                    
                     return api.put(`/participants/${participant.id}`, {
+                        ...participant,
                         gifteeId: receiverId
                     });
                 })
             );
 
-            // 5. Marquer le groupe comme "tirage effectué"
+            // 8. Marquer le groupe comme terminé
             await api.put(`/groups/${groupId}`, {
+                ...group,
                 isDrawDone: true,
                 status: 'drawn'
             });
 
-            console.log('🎉 Tirage au sort terminé !');
+            console.log('🎉 Tirage terminé avec succès !');
+            alert(`Tirage réussi ! ${assignments.length} participants ont reçu leur assignation.`);
             window.location.reload();
-            
+
         } catch (error) {
-            console.error("❌ Erreur lors du tirage:", error);
-            alert("Erreur lors du tirage au sort. Réessayez.");
+            console.error('❌ Erreur lors du tirage:', error);
+            alert('Erreur lors du tirage au sort. Réessayez.');
         } finally {
             setDrawLoading(false);
         }
