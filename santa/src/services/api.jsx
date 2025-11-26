@@ -35,3 +35,47 @@ export const loginUser = async (email, password) => {
 };
 
 export default api;
+
+// Remplacez la fonction handleStatusChange dans GroupManage.jsx :
+
+const handleStatusChange = async (participantId, newStatus) => {
+    console.log('🔍 Changement de statut:', participantId, '->', newStatus);
+    
+    try {
+        if (newStatus === 'rejected') {
+            if (!window.confirm("Refuser ce participant ?")) return;
+            
+            console.log('🗑️ Suppression participation:', participantId);
+            await api.delete(`/participants/${participantId}`);
+            
+            // Mise à jour locale
+            setParticipants(participants.filter(p => p.id !== participantId));
+            console.log('✅ Participation supprimée');
+            
+        } else if (newStatus === 'approved') {
+            console.log('✅ Validation participation:', participantId);
+            
+            // CHANGEMENT : Utiliser PUT au lieu de PATCH pour MockAPI
+            const currentParticipant = participants.find(p => p.id === participantId);
+            
+            const response = await api.patch(`/participants/${participantId}`, {
+                ...currentParticipant,  // Garder toutes les propriétés existantes
+                status: newStatus       // Changer seulement le status
+            });
+            
+            console.log('📡 Réponse serveur:', response.data);
+            
+            // Mise à jour locale
+            setParticipants(participants.map(p =>
+                p.id === participantId ? { ...p, status: newStatus } : p
+            ));
+            
+            console.log('🎉 Participant validé avec succès !');
+        }
+    } catch (error) {
+        console.error('❌ ERREUR lors du changement de statut:', error);
+        console.error('📡 Détails erreur:', error.response?.data);
+        console.error('📊 Status HTTP:', error.response?.status);
+        alert(`Erreur: ${error.message}`);
+    }
+};

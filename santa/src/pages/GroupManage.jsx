@@ -87,9 +87,12 @@ const GroupManage = () => {
             } else if (newStatus === 'approved') {
                 console.log('✅ Validation participation:', participantId);
                 
-                // PATCH pour changer le status
-                const response = await api.patch(`/participants/${participantId}`, { 
-                    status: newStatus 
+                // CHANGEMENT : Utiliser PUT au lieu de PATCH pour MockAPI
+                const currentParticipant = participants.find(p => p.id === participantId);
+                
+                const response = await api.put(`/participants/${participantId}`, {
+                    ...currentParticipant,  // Garder toutes les propriétés existantes
+                    status: newStatus       // Changer seulement le status
                 });
                 
                 console.log('📡 Réponse serveur:', response.data);
@@ -103,6 +106,8 @@ const GroupManage = () => {
             }
         } catch (error) {
             console.error('❌ ERREUR lors du changement de statut:', error);
+            console.error('📡 Détails erreur:', error.response?.data);
+            console.error('📊 Status HTTP:', error.response?.status);
             alert(`Erreur: ${error.message}`);
         }
     };
@@ -186,7 +191,7 @@ const GroupManage = () => {
     const approved = participants.filter(p => p.status === 'approved');
 
     return (
-        <div className="min-h-screen text-slate-200 pb-10 bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-900">
+        <div className="min-h-screen text-slate-200 pb-10 bg-linear-to-br from-slate-900 via-slate-800 to-indigo-900">
             
             <header className="bg-slate-800/40 backdrop-blur-md border-b border-slate-700/50 shadow-xl">
                 <div className="max-w-5xl mx-auto px-4 py-6 flex justify-between items-center">
@@ -264,7 +269,7 @@ const GroupManage = () => {
                         
                         <button
                             onClick={handleDraw}
-                            className="btn btn-primary bg-gradient-to-r from-red-500 to-red-700 border-none shadow-lg text-white"
+                            className="btn btn-primary bg-linear-to-r from-red-500 to-red-700 border-none shadow-lg text-white"
                             disabled={approved.length < 2 || drawLoading || group?.isDrawDone}
                         >
                             {drawLoading ? (

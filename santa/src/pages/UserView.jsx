@@ -82,7 +82,7 @@ const UserView = () => {
       {/* --- CONTENU CENTRAL --- */}
       <div className="z-10 text-center max-w-lg w-full">
         
-        <h2 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-yellow-300 mb-8 drop-shadow-sm">
+        <h2 className="text-4xl font-bold text-transparent bg-clip-text bg-linear-to-r from-red-400 to-yellow-300 mb-8 drop-shadow-sm">
           Bonjour {currentUser.name} !
         </h2>
 

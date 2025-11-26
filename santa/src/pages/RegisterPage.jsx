@@ -94,12 +94,12 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="min-h-screen text-slate-200 flex items-center justify-center px-4 bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-900">
+    <div className="min-h-screen text-slate-200 flex items-center justify-center px-4 bg-linear-to-br from-slate-900 via-slate-800 to-indigo-900">
       
       <div className="bg-slate-800/40 backdrop-blur-md border border-slate-700/50 shadow-2xl rounded-2xl p-8 max-w-md w-full relative overflow-hidden">
         
         {/* Effet de brillance liquide */}
-        <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent rounded-2xl pointer-events-none"></div>
+        <div className="absolute inset-0 bg-linear-to-br from-white/5 via-transparent to-transparent rounded-2xl pointer-events-none"></div>
         <div className="absolute top-0 left-1/4 w-32 h-32 bg-indigo-500/10 rounded-full blur-xl"></div>
         <div className="absolute bottom-0 right-1/4 w-24 h-24 bg-purple-500/10 rounded-full blur-xl"></div>
         
@@ -195,7 +195,7 @@ const RegisterPage = () => {
             
             <button 
               type="submit" 
-              className="btn w-full bg-gradient-to-r from-indigo-500/80 to-purple-600/80 backdrop-blur-sm border-indigo-500/30 shadow-lg text-white hover:from-indigo-400/80 hover:to-purple-500/80 transition-all duration-300"
+              className="btn w-full bg-linear-to-r from-indigo-500/80 to-purple-600/80 backdrop-blur-sm border-indigo-500/30 shadow-lg text-white hover:from-indigo-400/80 hover:to-purple-500/80 transition-all duration-300"
             >
               {isModerator ? '🎯 Créer mon espace' : "📝 M'inscrire"}
             </button>
