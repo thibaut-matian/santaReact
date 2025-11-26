@@ -77,22 +77,20 @@ const GroupManage = () => {
             if (newStatus === 'rejected') {
                 if (!window.confirm("Refuser ce participant ?")) return;
                 
-                console.log('🗑️ Suppression participation:', participantId);
                 await api.delete(`/participants/${participantId}`);
-                
-                // Mise à jour locale
                 setParticipants(participants.filter(p => p.id !== participantId));
-                console.log('✅ Participation supprimée');
                 
             } else if (newStatus === 'approved') {
                 console.log('✅ Validation participation:', participantId);
                 
-                // CHANGEMENT : Utiliser PUT au lieu de PATCH pour MockAPI
-                const currentParticipant = participants.find(p => p.id === participantId);
+                // SOLUTION : Récupérer d'abord le participant complet
+                const participantResponse = await api.get(`/participants/${participantId}`);
+                const currentParticipant = participantResponse.data;
                 
+                // Ensuite faire un PUT avec toutes les données
                 const response = await api.put(`/participants/${participantId}`, {
-                    ...currentParticipant,  // Garder toutes les propriétés existantes
-                    status: newStatus       // Changer seulement le status
+                    ...currentParticipant,
+                    status: newStatus
                 });
                 
                 console.log('📡 Réponse serveur:', response.data);
@@ -102,13 +100,13 @@ const GroupManage = () => {
                     p.id === participantId ? { ...p, status: newStatus } : p
                 ));
                 
-                console.log('🎉 Participant validé avec succès !');
+                alert('Participant validé avec succès !');
             }
         } catch (error) {
-            console.error('❌ ERREUR lors du changement de statut:', error);
-            console.error('📡 Détails erreur:', error.response?.data);
-            console.error('📊 Status HTTP:', error.response?.status);
-            alert(`Erreur: ${error.message}`);
+            console.error('❌ ERREUR complète:', error);
+            console.error('📡 Status:', error.response?.status);
+            console.error('📊 Data:', error.response?.data);
+            alert(`Erreur réseau: ${error.message}`);
         }
     };
 
