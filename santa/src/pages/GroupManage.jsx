@@ -149,7 +149,7 @@ const GroupManage = () => {
                 assignments.map(({ giverId, receiverId }) => {
                     const participant = approved.find(p => p.userId === giverId);
                     console.log(`🎁 ${giverId} -> ${receiverId}`);
-                    return api.patch(`/participants/${participant.id}`, {
+                    return api.put(`/participants/${participant.id}`, {
                         gifteeId: receiverId
                     });
                 })
