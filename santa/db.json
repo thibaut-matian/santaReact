@@ -36,37 +36,121 @@
       "role": "moderator"
     },
     {
-      "id": "3389",
-      "name": "Mila",
-      "email": "mila@santa.com",
-      "password": "test",
+      "id": "750c",
+      "name": "Thibaut",
+      "email": "thibaut@modo.com",
+      "password": "testmodo",
       "role": "moderator"
     },
     {
-      "id": "e75e",
-      "name": "dany",
-      "email": "dany@santa.com",
+      "id": "78a1",
+      "name": "Wendy",
+      "email": "wendy@santa.com",
       "password": "test",
       "role": "user"
     },
     {
-      "id": "66de",
-      "name": "alin",
-      "email": "alain@santa.com",
+      "id": "5e32",
+      "name": "Roxane",
+      "email": "roxane@santa.com",
       "password": "test",
       "role": "user"
     },
     {
-      "id": "1ff1",
-      "name": "charlie",
-      "email": "charlie@santa.com",
+      "id": "c4df",
+      "name": "Roxane",
+      "email": "roxane@santa.com",
       "password": "test",
       "role": "user"
     },
     {
-      "id": "89b9",
-      "name": "mila",
-      "email": "mila@test.com",
+      "id": "7695",
+      "name": "Véro",
+      "email": "vero@santa.com",
+      "password": "test",
+      "role": "user"
+    },
+    {
+      "id": "23e2",
+      "name": "Lisa",
+      "email": "lisa@santa.com",
+      "password": "test",
+      "role": "user"
+    },
+    {
+      "id": "9f37",
+      "name": "Karen",
+      "email": "karen@santa.com",
+      "password": "test",
+      "role": "user"
+    },
+    {
+      "id": "c0be",
+      "name": "James",
+      "email": "james@santa.com",
+      "password": "test",
+      "role": "user"
+    },
+    {
+      "id": "46fd",
+      "name": "Anziz",
+      "email": "anziz@santa.com",
+      "password": "test",
+      "role": "user"
+    },
+    {
+      "id": "663c",
+      "name": "Mehdi",
+      "email": "mehdi@santa.com",
+      "password": "test",
+      "role": "user"
+    },
+    {
+      "id": "785c",
+      "name": "Ben",
+      "email": "ben@santa.com",
+      "password": "test",
+      "role": "user"
+    },
+    {
+      "id": "efe8",
+      "name": "Thibaut",
+      "email": "thibaut@santa.com",
+      "password": "test",
+      "role": "user"
+    },
+    {
+      "id": "d59a",
+      "name": "Stephane N ",
+      "email": "stephane@santa.com",
+      "password": "test",
+      "role": "user"
+    },
+    {
+      "id": "8433",
+      "name": "Stephane G ",
+      "email": "stephaneg@santa.com",
+      "password": "test",
+      "role": "user"
+    },
+    {
+      "id": "077e",
+      "name": "Pharrel",
+      "email": "pharrel@santa.com",
+      "password": "test",
+      "role": "user"
+    },
+    {
+      "id": "3467",
+      "name": "Pharrel",
+      "email": "pharell@santa.com",
+      "password": "test",
+      "role": "user"
+    },
+    {
+      "id": "3756",
+      "name": "Antoine",
+      "email": "antoine@santa.com",
       "password": "test",
       "role": "user"
     }
@@ -81,18 +165,25 @@
       "isDrawDone": false
     },
     {
-      "id": "7824",
-      "name": "Noel Du CDPI",
-      "moderatorId": "c093",
-      "status": "open",
-      "isDrawDone": false
-    },
-    {
       "id": "96ad",
       "name": "Event Bucado",
       "moderatorId": "3389",
       "status": "drawn",
       "isDrawDone": true
+    },
+    {
+      "id": "ce97",
+      "name": "CDpi pas comme les autres ",
+      "moderatorId": "fa5e",
+      "status": "drawn",
+      "isDrawDone": true
+    },
+    {
+      "id": "2e75",
+      "name": "Noel CDPI LaPlateforme_",
+      "moderatorId": "750c",
+      "status": "open",
+      "isDrawDone": false
     }
   ],
   "participants": [
@@ -112,31 +203,157 @@
     },
     {
       "id": "021c",
-      "userId": "e75e",
+      "userId": null,
       "groupId": "96ad",
       "status": "approved",
       "gifteeId": "89b9"
     },
     {
       "id": "0d65",
-      "userId": "66de",
+      "userId": null,
       "groupId": "96ad",
       "status": "approved",
       "gifteeId": "e75e"
     },
     {
       "id": "7ea9",
-      "userId": "1ff1",
+      "userId": null,
       "groupId": "96ad",
       "status": "approved",
       "gifteeId": "66de"
     },
     {
       "id": "5226",
-      "userId": "89b9",
+      "userId": null,
       "groupId": "96ad",
       "status": "approved",
       "gifteeId": "1ff1"
+    },
+    {
+      "id": "0468",
+      "userId": null,
+      "groupId": "ce97",
+      "status": "approved",
+      "gifteeId": "fa81"
+    },
+    {
+      "id": "a8ab",
+      "userId": null,
+      "groupId": "ce97",
+      "status": "approved",
+      "gifteeId": "99c5"
+    },
+    {
+      "id": "b890",
+      "userId": null,
+      "groupId": "ce97",
+      "status": "approved",
+      "gifteeId": "d884"
+    },
+    {
+      "id": "9c8a",
+      "userId": null,
+      "groupId": "ce97",
+      "status": "approved",
+      "gifteeId": "90d8"
+    },
+    {
+      "id": "56c2",
+      "userId": "78a1",
+      "groupId": "2e75",
+      "status": "approved",
+      "gifteeId": null
+    },
+    {
+      "id": "5b2f",
+      "userId": "c4df",
+      "groupId": "2e75",
+      "status": "approved",
+      "gifteeId": null
+    },
+    {
+      "id": "c3b0",
+      "userId": "7695",
+      "groupId": "2e75",
+      "status": "approved",
+      "gifteeId": null
+    },
+    {
+      "id": "6d28",
+      "userId": "23e2",
+      "groupId": "2e75",
+      "status": "approved",
+      "gifteeId": null
+    },
+    {
+      "id": "3c8b",
+      "userId": "9f37",
+      "groupId": "2e75",
+      "status": "approved",
+      "gifteeId": null
+    },
+    {
+      "id": "fd91",
+      "userId": "c0be",
+      "groupId": "2e75",
+      "status": "approved",
+      "gifteeId": null
+    },
+    {
+      "id": "8301",
+      "userId": "46fd",
+      "groupId": "2e75",
+      "status": "approved",
+      "gifteeId": null
+    },
+    {
+      "id": "b1b7",
+      "userId": "663c",
+      "groupId": "2e75",
+      "status": "approved",
+      "gifteeId": null
+    },
+    {
+      "id": "1748",
+      "userId": "785c",
+      "groupId": "2e75",
+      "status": "approved",
+      "gifteeId": null
+    },
+    {
+      "id": "316c",
+      "userId": "efe8",
+      "groupId": "2e75",
+      "status": "approved",
+      "gifteeId": null
+    },
+    {
+      "id": "0ebd",
+      "userId": "d59a",
+      "groupId": "2e75",
+      "status": "approved",
+      "gifteeId": null
+    },
+    {
+      "id": "d9c3",
+      "userId": "8433",
+      "groupId": "2e75",
+      "status": "approved",
+      "gifteeId": null
+    },
+    {
+      "id": "f8d3",
+      "userId": "3467",
+      "groupId": "2e75",
+      "status": "approved",
+      "gifteeId": null
+    },
+    {
+      "id": "73f3",
+      "userId": "3756",
+      "groupId": "2e75",
+      "status": "approved",
+      "gifteeId": null
     }
   ]
 }
