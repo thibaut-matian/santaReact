@@ -153,6 +153,13 @@
       "email": "antoine@santa.com",
       "password": "test",
       "role": "user"
+    },
+    {
+      "id": "7bed",
+      "name": "Antoine",
+      "email": "antoine@santa.com",
+      "password": "test",
+      "role": "moderator"
     }
   ],
   "groups": [
@@ -182,6 +189,13 @@
       "id": "2e75",
       "name": "Noel CDPI LaPlateforme_",
       "moderatorId": "750c",
+      "status": "open",
+      "isDrawDone": false
+    },
+    {
+      "id": "f98c",
+      "name": "noelcdpi",
+      "moderatorId": "7bed",
       "status": "open",
       "isDrawDone": false
     }
