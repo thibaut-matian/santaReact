@@ -83,7 +83,6 @@ const GroupManage = () => {
             } else if (newStatus === 'approved') {
                 console.log('✅ Validation participation:', participantId);
                 
-                
                 const currentParticipant = participants.find(p => p.id === participantId);
                 
                 const response = await api.put(`/participants/${participantId}`, {
@@ -108,10 +107,7 @@ const GroupManage = () => {
 
     // Fonction pour lancer le tirage au sort
     const handleDraw = async () => {
-        // 1. Récupérer TOUS les participants validés (excluding pending)
         const approved = participants.filter(p => p.status === 'approved');
-        
-        console.log('👥 Participants validés:', approved.length);
         
         if (approved.length < 2) {
             alert("Il faut au moins 2 participants validés pour faire un tirage !");
@@ -125,7 +121,7 @@ const GroupManage = () => {
         setDrawLoading(true);
 
         try {
-            // 2. Remettre TOUS les gifteeId à null avant nouveau tirage
+            // Remettre à zéro les assignations
             console.log('🔄 Remise à zéro des assignations...');
             await Promise.all(
                 approved.map(participant => 
@@ -136,19 +132,8 @@ const GroupManage = () => {
                 )
             );
 
-            // 3. Créer la liste des IDs utilisateur
+            // Algorithme de tirage
             const userIds = approved.map(p => p.userId);
-            console.log('📋 Liste des participants:', userIds);
-            
-            // 4. Mélanger la liste (Fisher-Yates)
-            const shuffled = [...userIds];
-            for (let i = shuffled.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-            }
-            console.log('🎲 Liste mélangée:', shuffled);
-
-            // 5. ALGORITHME SIMPLIFIÉ ET SÛR
             let attempts = 0;
             let assignments = [];
 
@@ -156,21 +141,20 @@ const GroupManage = () => {
                 attempts++;
                 assignments = [];
                 
-                // Re-mélanger à chaque tentative
+                // Mélanger
                 const shuffled = [...userIds];
                 for (let i = shuffled.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
                     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
                 }
                 
-                // Créer les assignations
+                // Créer assignations
                 let isValid = true;
                 for (let i = 0; i < userIds.length; i++) {
                     const giverId = userIds[i];
                     const receiverId = shuffled[i];
                     
                     if (giverId === receiverId) {
-                        console.log(`🔄 Tentative ${attempts}: Collision détectée, nouveau mélange...`);
                         isValid = false;
                         break;
                     }
@@ -178,43 +162,39 @@ const GroupManage = () => {
                     assignments.push({ giverId, receiverId });
                 }
                 
-                if (isValid) {
-                    console.log(`✅ Tirage valide trouvé en ${attempts} tentative(s)!`);
-                    break;
-                }
+                if (isValid) break;
                 
-            } while (attempts < 50); // Max 50 tentatives
+            } while (attempts < 50);
 
             if (attempts >= 50) {
-                alert('Impossible de générer un tirage valide. Contactez le développeur.');
+                alert('Impossible de générer un tirage valide.');
                 setDrawLoading(false);
                 return;
             }
 
-            console.log('🎯 Assignations finales:', assignments);
-
-            // 6. Enregistrer les assignations dans la BD
+            // Sauvegarder les assignations
             await Promise.all(
-                assignments.map(({ giverId, receiverId }) => 
-                    api.put(`/participants/${giverId}`, {
-                        status: 'approved',
+                assignments.map(({ giverId, receiverId }) => {
+                    const participant = approved.find(p => p.userId === giverId);
+                    return api.put(`/participants/${participant.id}`, {
+                        ...participant,
                         gifteeId: receiverId
-                    })
-                )
+                    });
+                })
             );
 
-            console.log('✅ Tirage au sort enregistré avec succès !');
-            alert('Tirage au sort effectué avec succès !');
-            
-            // Recharger les données du groupe pour refléter les changements
-            const updatedGroupRes = await api.get(`/groups/${groupId}`);
-            setGroup(updatedGroupRes.data);
+            // Marquer le groupe comme terminé
+            await api.put(`/groups/${groupId}`, {
+                ...group,
+                isDrawDone: true,
+                status: 'drawn'
+            });
 
-            const updatedParticipantsRes = await api.get(`/participants?groupId=${groupId}`);
-            setParticipants(updatedParticipantsRes.data);
+            console.log('🎉 Tirage terminé !');
+            window.location.reload();
 
         } catch (error) {
-            console.error('❌ ERREUR lors du tirage au sort:', error);
+            console.error('❌ Erreur tirage:', error);
             alert(`Erreur: ${error.message}`);
         } finally {
             setDrawLoading(false);
@@ -222,44 +202,150 @@ const GroupManage = () => {
     };
 
     if (loading) {
-        return <div>Chargement en cours...</div>;
+        return (
+            <div className="min-h-screen text-slate-200 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="loading loading-spinner loading-lg text-primary mb-4"></div>
+                    <p className="text-lg">Chargement...</p>
+                </div>
+            </div>
+        );
     }
 
+    // Séparation des participants
+    const pending = participants.filter(p => p.status === 'pending');
+    const approved = participants.filter(p => p.status === 'approved');
+
     return (
-        <div>
-            <h1>Gestion du groupe: {group.name}</h1>
+        <div className="min-h-screen text-slate-200 pb-10 bg-linear-to-br from-slate-900 via-slate-800 to-indigo-900">
             
-            <h2>Participants ({participants.length})</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Nom</th>
-                        <th>Email</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {participants.map(participant => (
-                        <tr key={participant.id}>
-                            <td>{participant.user.name}</td>
-                            <td>{participant.user.email}</td>
-                            <td>{participant.status}</td>
-                            <td>
-                                {participant.status === 'pending' ? (
-                                    <button onClick={() => handleStatusChange(participant.id, 'approved')}>Approuver</button>
-                                ) : (
-                                    <button onClick={() => handleStatusChange(participant.id, 'rejected')}>Refuser</button>
-                                )}
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-            
-            <button onClick={handleDraw} disabled={drawLoading}>
-                {drawLoading ? 'Tirage en cours...' : 'Lancer le tirage au sort'}
-            </button>
+            <header className="bg-slate-800/40 backdrop-blur-md border-b border-slate-700/50 shadow-xl">
+                <div className="max-w-5xl mx-auto px-4 py-6 flex justify-between items-center">
+                    <h1 className="text-3xl font-bold text-white">🎅 Gestion du groupe</h1>
+                    <button 
+                        onClick={() => navigate('/')} 
+                        className="btn btn-ghost text-slate-300"
+                    >
+                        Se déconnecter
+                    </button>
+                </div>
+            </header>
+
+            <main className="pt-12 px-4 max-w-5xl mx-auto space-y-8">
+                
+                {group && (
+                    <div className="bg-slate-800/40 backdrop-blur-md rounded-2xl p-6 border border-slate-700/50 shadow-xl">
+                        <h2 className="text-2xl font-bold text-white mb-4">{group.name}</h2>
+                        <p className="text-slate-300">Modérateur: Vous</p>
+                        <p className="text-slate-300">Statut: {group.isDrawDone ? '✅ Tirage effectué' : '⏳ En cours'}</p>
+                        <p className="text-slate-300">Participants: {participants.length} total</p>
+                    </div>
+                )}
+
+                {/* DEMANDES EN ATTENTE */}
+                <section className="bg-orange-600/10 backdrop-blur-md rounded-2xl p-6 border border-orange-500/20 shadow-xl">
+                    <h2 className="text-2xl font-bold text-orange-200 mb-4 flex items-center gap-2">
+                        ⏳ Demandes en attente ({pending.length})
+                    </h2>
+
+                    {pending.length === 0 ? (
+                        <p className="text-orange-100/70 italic">Aucune nouvelle demande.</p>
+                    ) : (
+                        <div className="overflow-x-auto">
+                            <table className="table text-white w-full">
+                                <thead>
+                                    <tr className="text-slate-400 border-b border-white/10">
+                                        <th>Nom</th>
+                                        <th>Email</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {pending.map((p) => (
+                                        <tr key={p.id} className="border-b border-white/5">
+                                            <td className="font-bold">{p.user?.name || 'Nom introuvable'}</td>
+                                            <td>{p.user?.email || 'Email introuvable'}</td>
+                                            <td className="space-x-2">
+                                                <button
+                                                    onClick={() => handleStatusChange(p.id, 'approved')}
+                                                    className="btn btn-sm btn-success"
+                                                >
+                                                    ✅ Valider
+                                                </button>
+                                                <button
+                                                    onClick={() => handleStatusChange(p.id, 'rejected')}
+                                                    className="btn btn-sm btn-error"
+                                                >
+                                                    ❌ Refuser
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </section>
+
+                {/* PARTICIPANTS VALIDÉS */}
+                <section className="bg-green-600/10 backdrop-blur-md rounded-2xl p-6 border border-green-500/20 shadow-xl">
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-2xl font-bold text-green-200 flex items-center gap-2">
+                            ✅ Participants validés ({approved.length})
+                        </h2>
+                        
+                        <button
+                            onClick={handleDraw}
+                            className="btn btn-primary bg-linear-to-r from-red-500 to-red-700 border-none shadow-lg text-white"
+                            disabled={approved.length < 2 || drawLoading || group?.isDrawDone}
+                        >
+                            {drawLoading ? (
+                                <>🔄 Tirage en cours...</>
+                            ) : group?.isDrawDone ? (
+                                <>✅ Tirage effectué</>
+                            ) : (
+                                <>🎁 Lancer le tirage au sort !</>
+                            )}
+                        </button>
+                    </div>
+
+                    {approved.length === 0 ? (
+                        <p className="text-green-100/70 italic">Aucun participant validé.</p>
+                    ) : (
+                        <div className="overflow-x-auto">
+                            <table className="table text-white w-full">
+                                <thead>
+                                    <tr className="text-slate-400 border-b border-white/10">
+                                        <th>Nom</th>
+                                        <th>Email</th>
+                                        <th>Statut</th>
+                                        {group?.isDrawDone && <th>Destinataire</th>}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {approved.map((p) => (
+                                        <tr key={p.id} className="border-b border-white/5">
+                                            <td className="font-bold">{p.user?.name}</td>
+                                            <td>{p.user?.email}</td>
+                                            <td><span className="badge badge-success">Validé</span></td>
+                                            {group?.isDrawDone && (
+                                                <td>
+                                                    {p.gifteeId ? (
+                                                        <span className="text-green-400">🎁 Assigné</span>
+                                                    ) : (
+                                                        <span className="text-gray-400">En attente...</span>
+                                                    )}
+                                                </td>
+                                            )}
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </section>
+
+            </main>
         </div>
     );
 };
