@@ -121,98 +121,131 @@ const GroupManage = () => {
         setDrawLoading(true);
 
         try {
-            // 1. Remettre à zéro les assignations
+            console.log('🎲 === DÉBUT DU TIRAGE AU SORT ===');
+            console.log('👥 Participants approuvés:', approved.length);
+            
+            // 1. Lister tous les participants
+            approved.forEach((p, i) => {
+                console.log(`${i + 1}. ${p.user?.name} (userId: ${p.userId}, participantId: ${p.id})`);
+            });
+
+            // 2. Remettre à zéro TOUTES les assignations
             console.log('🔄 Remise à zéro des assignations...');
-            await Promise.all(
-                approved.map(participant => 
-                    api.put(`/participants/${participant.id}`, {
+            
+            for (let i = 0; i < approved.length; i++) {
+                const participant = approved[i];
+                console.log(`🔄 Reset ${i + 1}/${approved.length}: ${participant.user?.name}`);
+                
+                try {
+                    await api.put(`/participants/${participant.id}`, {
                         ...participant,
                         gifteeId: null
-                    })
-                )
-            );
+                    });
+                    console.log(`✅ Reset OK pour ${participant.user?.name}`);
+                } catch (error) {
+                    console.error(`❌ Erreur reset ${participant.user?.name}:`, error);
+                }
+            }
 
-            // 2. ALGORITHME CIRCULAIRE SIMPLE ET SÛR
+            // 3. Créer la liste des userIds
             const userIds = approved.map(p => p.userId);
-            console.log('👥 Liste des participants:', userIds);
+            console.log('📋 UserIds:', userIds);
             
-            // Mélanger la liste une seule fois
+            // 4. Mélanger la liste
             const shuffled = [...userIds];
             for (let i = shuffled.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
             }
-            console.log('🎲 Liste mélangée:', shuffled);
+            console.log('🎲 UserIds mélangés:', shuffled);
 
-            // 3. ASSIGNATION CIRCULAIRE : chaque personne donne à la suivante
+            // 5. Créer TOUTES les assignations (algorithme circulaire)
             const assignments = [];
             for (let i = 0; i < shuffled.length; i++) {
                 const giverId = shuffled[i];
-                const receiverId = shuffled[(i + 1) % shuffled.length]; // Le suivant (dernier → premier)
+                const receiverId = shuffled[(i + 1) % shuffled.length];
                 
                 assignments.push({ giverId, receiverId });
-                console.log(`🎁 ${i + 1}/${shuffled.length}: ${giverId} → ${receiverId}`);
+                console.log(`🎁 Assignation ${i + 1}/${shuffled.length}: ${giverId} → ${receiverId}`);
             }
             
-            console.log('🎯 TOUTES les assignations:', assignments);
-            console.log('📊 Nombre d\'assignations:', assignments.length);
-
-            // 4. VÉRIFICATION : Chaque personne apparaît exactement 1 fois comme donneur et 1 fois comme receveur
-            const givers = assignments.map(a => a.giverId).sort();
-            const receivers = assignments.map(a => a.receiverId).sort();
+            console.log('🎯 TOUTES les assignations créées:', assignments.length);
             
-            console.log('🎁 Donneurs (triés):', givers);
-            console.log('🎁 Receveurs (triés):', receivers);
-            
-            // Vérification que les listes sont identiques
-            const allParticipants = shuffled.slice().sort();
-            if (JSON.stringify(givers) !== JSON.stringify(allParticipants) || 
-                JSON.stringify(receivers) !== JSON.stringify(allParticipants)) {
-                console.error('❌ ERREUR: Les listes ne correspondent pas !');
-                console.log('Expected:', allParticipants);
-                console.log('Givers:', givers);
-                console.log('Receivers:', receivers);
-                alert('Erreur dans l\'algorithme - contactez le développeur');
+            // 6. VÉRIFICATION obligatoire
+            if (assignments.length !== approved.length) {
+                console.error('❌ ERREUR: Nombre d\'assignations incorrect !');
+                console.log(`Expected: ${approved.length}, Got: ${assignments.length}`);
+                alert('Erreur dans le nombre d\'assignations');
                 setDrawLoading(false);
                 return;
             }
 
-            // 5. Sauvegarder TOUTES les assignations
-            console.log('💾 Sauvegarde des assignations...');
-            await Promise.all(
-                assignments.map(async ({ giverId, receiverId }, index) => {
-                    const participant = approved.find(p => p.userId === giverId);
-                    
-                    if (!participant) {
-                        console.error(`❌ Participant non trouvé pour userId: ${giverId}`);
-                        return;
-                    }
-                    
-                    console.log(`💾 ${index + 1}/${assignments.length}: Sauvegarde ${giverId} → ${receiverId}`);
-                    
-                    return api.put(`/participants/${participant.id}`, {
-                        ...participant,
-                        gifteeId: receiverId
+            // 7. Sauvegarder UNE PAR UNE avec vérification
+            console.log('💾 === SAUVEGARDE DES ASSIGNATIONS ===');
+            let successCount = 0;
+            let errorCount = 0;
+            
+            for (let i = 0; i < assignments.length; i++) {
+                const { giverId, receiverId } = assignments[i];
+                const participant = approved.find(p => p.userId === giverId);
+                
+                if (!participant) {
+                    console.error(`❌ Participant non trouvé pour userId: ${giverId}`);
+                    errorCount++;
+                    continue;
+                }
+                
+                console.log(`💾 Sauvegarde ${i + 1}/${assignments.length}: ${participant.user?.name} (${giverId}) → ${receiverId}`);
+                
+                try {
+                    const response = await api.put(`/participants/${participant.id}`, {
+                        id: participant.id,
+                        userId: participant.userId,
+                        groupId: participant.groupId,
+                        status: participant.status,
+                        gifteeId: receiverId  // ← L'assignation
                     });
-                })
-            );
+                    
+                    console.log(`✅ Sauvegarde OK pour ${participant.user?.name}:`, response.data);
+                    successCount++;
+                    
+                    // Petite pause entre les requêtes
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    
+                } catch (error) {
+                    console.error(`❌ Erreur sauvegarde ${participant.user?.name}:`, error);
+                    console.error('📊 Détails:', error.response?.data);
+                    errorCount++;
+                }
+            }
+            
+            console.log(`📊 Résultat sauvegarde: ${successCount} réussies, ${errorCount} échouées`);
+            
+            if (errorCount > 0) {
+                alert(`Attention: ${errorCount} assignations ont échoué sur ${assignments.length}`);
+            }
 
-            // 6. Marquer le groupe comme terminé
+            // 8. Marquer le groupe comme terminé
+            console.log('🏁 Finalisation du tirage...');
             await api.put(`/groups/${groupId}`, {
                 ...group,
                 isDrawDone: true,
                 status: 'drawn'
             });
 
-            console.log('🎉 Tirage terminé avec succès !');
-            console.log(`✅ ${assignments.length} participants assignés sur ${approved.length}`);
+            console.log('🎉 === TIRAGE TERMINÉ ===');
+            console.log(`✅ ${successCount}/${approved.length} participants assignés`);
             
-            alert(`Tirage réussi ! ${assignments.length} participants ont reçu leur assignation.`);
-            window.location.reload();
+            alert(`Tirage terminé ! ${successCount} assignations sur ${approved.length} participants.`);
+            
+            // Recharger la page pour voir les résultats
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
 
         } catch (error) {
-            console.error('❌ Erreur tirage:', error);
-            alert(`Erreur: ${error.message}`);
+            console.error('❌ Erreur générale tirage:', error);
+            alert(`Erreur générale: ${error.message}`);
         } finally {
             setDrawLoading(false);
         }
