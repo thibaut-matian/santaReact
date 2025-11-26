@@ -157,7 +157,7 @@ const GroupManage = () => {
                 // SÉCURITÉ : Vérifier qu'on ne se donne pas à soi-même
                 if (giverId === receiverId) {
                     console.error('❌ ERREUR: Une personne se donne à elle-même!');
-                    alert('Erreur dans le tirage - relancez le tirage');
+                    alert('code 123 Erreur dans le tirage - relancez le tirage');
                     setDrawLoading(false);
                     return;
                 }
