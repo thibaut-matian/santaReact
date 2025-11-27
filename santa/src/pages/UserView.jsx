@@ -70,6 +70,7 @@ const UserView = () => {
   };
 
   const handleLogout = () => {
+    console.log('Bouton cliqué, déconnexion en cours...'); // DEBUG temporaire
     removeSecureItem('currentUser');
     navigate('/');
   };
@@ -88,7 +89,13 @@ const UserView = () => {
       {/* Nav au-dessus de tout pour capter les clics */}
       <nav className="absolute top-0 left-0 w-full p-6 flex justify-between z-50 text-white">
         <h1 className="text-xl font-bold"> Secret Santa</h1>
-        <button onClick={handleLogout} className="btn btn-ghost btn-sm">Déconnexion</button>
+        <button 
+          onClick={handleLogout} 
+          className="btn btn-ghost btn-sm"
+          style={{ pointerEvents: 'auto', position: 'relative', zIndex: 9999 }} // Force interaction
+        >
+          Déconnexion
+        </button>
       </nav>
 
       
