@@ -1,9 +1,7 @@
 import axios from 'axios';
+import { SecurityUtils } from '../utils/security.js';
 
-// LIEN 1 : Celui qui contient 'users' et 'participants'
 const BASE_URL_MAIN = 'https://6926cea626e7e41498fba2d5.mockapi.io';
-
-// LIEN 2 : Celui qui contient 'groups'  
 const BASE_URL_GROUPS = 'https://6926d48726e7e41498fbbb62.mockapi.io';
 
 const api = axios.create({
@@ -11,46 +9,57 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000, // 10 secondes de timeout
+  timeout: 10000,
 });
 
-// INTERCEPTEUR amélioré
 api.interceptors.request.use((config) => {
-  console.log('🌐 Requête API:', config.method.toUpperCase(), config.url);
-  
   if (config.url.includes('groups')) {
     config.baseURL = BASE_URL_GROUPS;
-    console.log('🔄 Redirection vers MockAPI Groups');
   }
-  
   return config;
 });
 
-// Intercepteur de réponse pour debug
 api.interceptors.response.use(
-  (response) => {
-    console.log('✅ Réponse API réussie:', response.status, response.config.url);
-    return response;
-  },
+  (response) => response,
   (error) => {
-    console.error('❌ Erreur API:', {
-      status: error.response?.status,
-      url: error.config?.url,
-      message: error.message,
-      data: error.response?.data
-    });
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('Erreur de connexion');
+    }
     return Promise.reject(error);
   }
 );
 
 export const loginUser = async (email, password) => {
   try {
-    console.log('🔑 Tentative de connexion:', email);
-    const response = await api.get(`/users?email=${email}&password=${password}`);
-    console.log('👤 Utilisateurs trouvés:', response.data.length);
-    return response.data.length > 0 ? response.data[0] : null;
+    if (!SecurityUtils.isValidEmail(email)) {
+      throw new Error('Format d\'email invalide');
+    }
+    
+    if (!SecurityUtils.isValidPassword(password)) {
+      throw new Error('Mot de passe invalide');
+    }
+    
+    const cleanEmail = SecurityUtils.sanitize(email.toLowerCase().trim());
+    
+    const response = await api.get('/users');
+    const users = response.data;
+    
+    const user = users.find(u => 
+      u.email?.toLowerCase() === cleanEmail && u.password === password
+    );
+    
+    if (!user) {
+      throw new Error('Email ou mot de passe incorrect');
+    }
+    
+    return {
+      id: user.id,
+      name: SecurityUtils.sanitize(user.name),
+      email: cleanEmail,
+      role: user.role
+    };
+    
   } catch (error) {
-    console.error('❌ Erreur login:', error);
     throw error;
   }
 };

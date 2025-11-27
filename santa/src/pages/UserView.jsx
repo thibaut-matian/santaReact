@@ -1,18 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api';
-import './UserView.css'; // On importe le CSS magique
+import { SecureText } from '../components/SecureText';
+import { useSecureStorage } from '../components/SecureText';
+
 
 const UserView = () => {
   const { groupId } = useParams();
   const navigate = useNavigate();
-  // On récupère l'utilisateur connecté
-  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  
+  const { getSecureItem, removeSecureItem } = useSecureStorage();
+  const currentUser = getSecureItem('currentUser');
 
+  const [group, setGroup] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [status, setStatus] = useState('loading'); // pending, approved, draw_done
-  const [gifteeName, setGifteeName] = useState(null); // Le nom de la cible
-  const [isOpened, setIsOpened] = useState(false); // Cadeau ouvert ou pas ?
+  const [status, setStatus] = useState('loading');
+  const [giftee, setGiftee] = useState(null); 
+  const [isOpened, setIsOpened] = useState(false); 
 
   useEffect(() => {
     const fetchUserStatus = async () => {
@@ -22,9 +26,9 @@ const UserView = () => {
       }
 
       try {
-        console.log('🔍 Vérification statut utilisateur:', currentUser.id);
-        
-        // 1. Chercher ma participation
+        const groupRes = await api.get(`/groups/${groupId}`);
+        setGroup(groupRes.data);
+
         const participantsRes = await api.get(`/participants?userId=${currentUser.id}&groupId=${groupId}`);
         
         if (participantsRes.data.length === 0) {
@@ -34,46 +38,40 @@ const UserView = () => {
         }
 
         const myParticipation = participantsRes.data[0];
-        console.log('📊 Ma participation:', myParticipation);
         
-        // 2. Vérifier le statut
         if (myParticipation.status === 'pending') {
-          console.log('⏳ En attente de validation');
           setStatus('pending');
         } else if (myParticipation.status === 'approved') {
-          // 3. Vérifier si j'ai une cible (tirage fait)
           if (myParticipation.gifteeId) {
-            console.log('🎁 J\'ai une cible:', myParticipation.gifteeId);
             
-            // Récupérer le nom de ma cible
             const gifteeRes = await api.get(`/users/${myParticipation.gifteeId}`);
-            console.log('👤 Ma cible:', gifteeRes.data);
             
-            setGifteeName(gifteeRes.data.name);
+            setGiftee(gifteeRes.data);
             setStatus('draw_done');
           } else {
-            console.log('✅ Validé mais pas de tirage encore');
             setStatus('approved');
           }
         }
 
         setLoading(false);
       } catch (error) {
-        console.error("❌ Erreur chargement statut:", error);
         setLoading(false);
       }
     };
 
     fetchUserStatus();
 
-    // SOLUTION : Rechargement plus fréquent (toutes les 3 secondes)
     const interval = setInterval(fetchUserStatus, 3000);
     return () => clearInterval(interval);
   }, [groupId, currentUser, navigate]);
 
   const handleOpenGift = () => {
     setIsOpened(true);
-    // Ici, tu pourrais jouer un son de grelot si tu voulais ! 🔔
+  };
+
+  const handleLogout = () => {
+    removeSecureItem('currentUser');
+    navigate('/');
   };
 
   if (loading) return <div className="min-h-screen bg-slate-900 flex items-center justify-center text-white">Chargement de la magie...</div>;
@@ -81,48 +79,62 @@ const UserView = () => {
   return (
     <div className="christmas-bg flex flex-col items-center justify-center min-h-screen relative p-4">
       
-      {/* --- FLOCONS DE NEIGE (Décoration) --- */}
+     
       <div className="snowflake">❄</div><div className="snowflake">❅</div>
       <div className="snowflake">❆</div><div className="snowflake">❄</div>
       <div className="snowflake">❅</div><div className="snowflake">❆</div>
       <div className="snowflake">❄</div>
 
-      {/* --- NAVBAR --- */}
+      
       <nav className="absolute top-0 left-0 w-full p-6 flex justify-between z-10 text-white">
-        <h1 className="text-xl font-bold">🎅 Secret Santa</h1>
-        <button onClick={() => navigate('/')} className="btn btn-ghost btn-sm">Quitter</button>
+        <h1 className="text-xl font-bold"> Secret Santa</h1>
+        <button onClick={handleLogout} className="btn btn-ghost btn-sm">Déconnexion sécurisée</button>
       </nav>
 
-      {/* --- CONTENU CENTRAL --- */}
+      
       <div className="z-10 text-center max-w-lg w-full">
         
-        <h2 className="text-4xl font-bold text-transparent bg-clip-text bg-linear-to-r from-red-400 to-yellow-300 mb-8 drop-shadow-sm">
-          Bonjour {currentUser.name} !
-        </h2>
+       
+        <h1 className="text-3xl font-bold text-white mb-2 drop-shadow-lg">
+          Bonjour <SecureText>{currentUser?.name}</SecureText> ! 
+        </h1>
 
-        {/* CAS 1 : EN ATTENTE */}
+        
+        {group && (
+          <h2 className="text-2xl font-bold text-white mb-4">
+            <SecureText>{group?.name}</SecureText>
+          </h2>
+        )}
+
+        
+        {status === 'not_registered' && (
+          <div className="alert alert-error shadow-lg">
+            <span> Tu n'es pas inscrit dans ce groupe !</span>
+          </div>
+        )}
+
         {status === 'pending' && (
           <div className="alert alert-warning shadow-lg">
             <span>⏳ Ton inscription est en attente de validation par le modérateur.</span>
           </div>
         )}
 
-        {/* CAS 2 : ATTENTE DU TIRAGE */}
-        {status === 'waiting_draw' && (
+        
+        {status === 'approved' && (
           <div className="card bg-white/10 backdrop-blur-md border border-white/20 p-8">
-            <div className="text-6xl mb-4">🎄</div>
             <h3 className="text-2xl font-bold text-white mb-2">Patience...</h3>
             <p className="text-slate-200">
               Le modérateur n'a pas encore lancé le tirage au sort. Reviens un peu plus tard !
             </p>
+            <div className="mt-4">
+              <div className="loading loading-dots loading-lg text-primary"></div>
+            </div>
           </div>
         )}
 
-        {/* CAS 3 : LE CADEAU EST LÀ ! */}
         {status === 'draw_done' && (
           <div>
             {!isOpened ? (
-              // BOITE FERMÉE
               <div 
                 onClick={handleOpenGift} 
                 className="gift-container cursor-pointer flex flex-col items-center"
@@ -133,7 +145,6 @@ const UserView = () => {
                 </p>
               </div>
             ) : (
-              // BOITE OUVERTE (RÉSULTAT)
               <div className="result-card bg-white text-slate-900 p-10 rounded-3xl shadow-2xl border-4 border-red-500">
                 <p className="text-sm uppercase tracking-widest text-gray-500 mb-2">Ta mission pour Noël</p>
                 <h3 className="text-2xl font-bold text-slate-800 mb-1">Tu offres un cadeau à :</h3>
@@ -141,16 +152,33 @@ const UserView = () => {
                 <div className="divider my-2"></div>
                 
                 <h1 className="text-5xl font-extrabold text-red-600 my-6">
-                  {gifteeName}
+                  <SecureText>{giftee?.name}</SecureText>
                 </h1>
                 
                 <div className="bg-red-50 p-4 rounded-xl mt-4">
                   <p className="text-red-800 text-sm">
-                    🤫 Shhh... Garde le secret jusqu'au jour J !
+                     Shhh... Garde le secret jusqu'au jour J !
                   </p>
                 </div>
+
+                {/* Informations supplémentaires sécurisées */}
+                {giftee?.email && (
+                  <div className="bg-blue-50 p-3 rounded-xl mt-3">
+                    <p className="text-blue-800 text-xs">
+                      📧 Contact : <SecureText>{giftee.email}</SecureText>
+                    </p>
+                  </div>
+                )}
               </div>
             )}
+          </div>
+        )}
+
+        {/* Message d'erreur générique */}
+        {status === 'loading' && (
+          <div className="flex flex-col items-center">
+            <div className="loading loading-spinner loading-lg text-primary mb-4"></div>
+            <p className="text-white">Chargement de la magie de Noël...</p>
           </div>
         )}
 

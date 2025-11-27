@@ -1,33 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../services/api';
+import { SecureText } from '../components/SecureText';
+import { useSecureStorage } from '../components/SecureText';
+import { SecurityUtils } from '../utils/security';
 
 const RegisterPage = () => {
   const navigate = useNavigate();
   const [groups, setGroups] = useState([]);
   
-  // Champs du formulaire
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   
-  // Mode : Est-ce qu'on veut être MODÉRATEUR (créer) ou USER (rejoindre) ?
   const [isModerator, setIsModerator] = useState(false);
-  
-  // Si Modérateur : Nom du nouveau groupe
   const [newGroupName, setNewGroupName] = useState('');
-  
-  // Si Utilisateur : ID du groupe à rejoindre
   const [selectedGroupId, setSelectedGroupId] = useState('');
 
-  // Charger la liste des groupes existants (pour les participants)
+  const { setSecureItem } = useSecureStorage();
+
   useEffect(() => {
     const fetchGroups = async () => {
       try {
         const res = await api.get('/groups');
         setGroups(res.data);
       } catch (err) {
-        console.error("Erreur chargement groupes", err);
       }
     };
     fetchGroups();
@@ -35,61 +34,120 @@ const RegisterPage = () => {
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    setError('');
+    setLoading(true);
 
     try {
-      // 1. CRÉATION DE L'UTILISATEUR
-      const userRes = await api.post('/users', {
-        name,
-        email,
-        password,
+      if (!name || name.trim().length < 2) {
+        throw new Error('Le nom doit contenir au moins 2 caractères');
+      }
+      
+      if (!SecurityUtils.isValidEmail(email)) {
+        throw new Error('Format d\'email invalide');
+      }
+      
+      if (!SecurityUtils.isValidPassword(password)) {
+        throw new Error('Le mot de passe doit contenir au moins 4 caractères');
+      }
+
+      if (isModerator && (!newGroupName || newGroupName.trim().length < 3)) {
+        throw new Error('Le nom du groupe doit contenir au moins 3 caractères');
+      }
+
+      if (!isModerator && !selectedGroupId) {
+        throw new Error('Veuillez choisir un groupe à rejoindre');
+      }
+
+      const existingUsers = await api.get('/users');
+      const emailExists = existingUsers.data.some(u => 
+        u.email?.toLowerCase() === email.toLowerCase()
+      );
+      
+      if (emailExists) {
+        throw new Error('Cet email est déjà utilisé');
+      }
+
+      const safeUserData = {
+        name: SecurityUtils.sanitize(name.trim()),
+        email: SecurityUtils.sanitize(email.toLowerCase().trim()),
+        password: SecurityUtils.sanitize(password),
         role: isModerator ? 'moderator' : 'user'
-      });
+      };
 
+      const userRes = await api.post('/users', safeUserData);
       const newUser = userRes.data;
-      console.log('Nouvel utilisateur créé:', newUser);
 
-      // 2. LOGIQUE SELON LE RÔLE
       if (isModerator) {
-        // --- CAS A : ORGANISATEUR ---
-        const groupRes = await api.post('/groups', {
-          name: newGroupName,
+        const safeGroupData = {
+          name: SecurityUtils.sanitize(newGroupName.trim()),
           moderatorId: newUser.id,
           status: 'open',
           isDrawDone: false
+        };
+
+        const groupRes = await api.post('/groups', safeGroupData);
+        
+        setSecureItem('currentUser', {
+          id: newUser.id,
+          name: safeUserData.name,
+          email: safeUserData.email,
+          role: safeUserData.role
         });
         
-        localStorage.setItem('currentUser', JSON.stringify(newUser));
         navigate(`/group-manage/${groupRes.data.id}`);
 
       } else {
-        // --- CAS B : PARTICIPANT ---
-        if (!selectedGroupId) {
-          alert("Veuillez choisir un groupe à rejoindre !");
-          return;
-        }
-
-        console.log('Inscription au groupe:', selectedGroupId, 'pour user:', newUser.id);
-
-        // CORRECTION : S'assurer que groupId est bien transmis
         const participantData = {
           userId: newUser.id,
-          groupId: selectedGroupId, // Pas besoin de Number() si c'est déjà une string
+          groupId: selectedGroupId,
           status: 'pending',
           gifteeId: null
         };
 
-        console.log('Données participant à envoyer:', participantData);
+        await api.post('/participants', participantData);
 
-        const participantRes = await api.post('/participants', participantData);
-        console.log('Participant créé:', participantRes.data);
-
-        localStorage.setItem('currentUser', JSON.stringify(newUser));
+        setSecureItem('currentUser', {
+          id: newUser.id,
+          name: safeUserData.name,
+          email: safeUserData.email,
+          role: safeUserData.role
+        });
+        
         navigate(`/group/${selectedGroupId}`);
       }
 
     } catch (error) {
-      console.error('Erreur complète:', error);
-      alert(`Erreur lors de l'inscription: ${error.message}`);
+      setError(error.message || 'Erreur lors de l\'inscription');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleNameChange = (e) => {
+    const value = e.target.value;
+    if (value.length <= 50) {
+      setName(SecurityUtils.sanitize(value));
+    }
+  };
+  
+  const handleEmailChange = (e) => {
+    const value = e.target.value;
+    if (value.length <= 254) {
+      setEmail(SecurityUtils.sanitize(value));
+    }
+  };
+  
+  const handlePasswordChange = (e) => {
+    const value = e.target.value;
+    if (value.length <= 100) {
+      setPassword(SecurityUtils.sanitize(value));
+    }
+  };
+
+  const handleGroupNameChange = (e) => {
+    const value = e.target.value;
+    if (value.length <= 100) {
+      setNewGroupName(SecurityUtils.sanitize(value));
     }
   };
 
@@ -106,21 +164,23 @@ const RegisterPage = () => {
         <div className="relative z-10">
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold text-white mb-2 drop-shadow-lg">
-              📝 Inscription
+              📝 Inscription Sécurisée
             </h1>
           </div>
           
           <form onSubmit={handleRegister} className="space-y-6">
             
-            {/* IDENTITÉ */}
             <div>
               <input 
                 type="text" 
                 placeholder="Ton Nom (ex: Julie)" 
                 value={name} 
-                onChange={(e) => setName(e.target.value)}
+                onChange={handleNameChange}
+                maxLength="50"
                 className="input input-bordered w-full bg-slate-700/50 backdrop-blur-sm border-slate-600/50 text-white placeholder-slate-400 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-400/20 transition-all"
                 required 
+                disabled={loading}
+                autoComplete="name"
               />
             </div>
             
@@ -129,24 +189,29 @@ const RegisterPage = () => {
                 type="email" 
                 placeholder="Email" 
                 value={email} 
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={handleEmailChange}
+                maxLength="254"
                 className="input input-bordered w-full bg-slate-700/50 backdrop-blur-sm border-slate-600/50 text-white placeholder-slate-400 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-400/20 transition-all"
                 required 
+                disabled={loading}
+                autoComplete="email"
               />
             </div>
             
             <div>
               <input 
                 type="password" 
-                placeholder="Mot de passe" 
+                placeholder="Mot de passe (min 4 caractères)" 
                 value={password} 
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={handlePasswordChange}
+                maxLength="100"
                 className="input input-bordered w-full bg-slate-700/50 backdrop-blur-sm border-slate-600/50 text-white placeholder-slate-400 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-400/20 transition-all"
                 required 
+                disabled={loading}
+                autoComplete="new-password"
               />
             </div>
 
-            {/* CHOIX DU RÔLE */}
             <div className="border-t border-slate-600/50 pt-6">
               <label className="cursor-pointer flex items-center gap-3 mb-4">
                 <input 
@@ -154,21 +219,23 @@ const RegisterPage = () => {
                   className="checkbox checkbox-primary"
                   checked={isModerator}
                   onChange={(e) => setIsModerator(e.target.checked)}
+                  disabled={loading}
                 />
                 <span className="font-bold text-slate-200">Je veux organiser un Secret Santa 🎅</span>
               </label>
             </div>
 
-            {/* CHAMP DYNAMIQUE */}
             {isModerator ? (
               <div>
                 <input 
                   type="text" 
                   placeholder="Nom de l'évènement (ex: Noël Famille 2024)" 
                   value={newGroupName} 
-                  onChange={(e) => setNewGroupName(e.target.value)}
+                  onChange={handleGroupNameChange}
+                  maxLength="100"
                   className="input input-bordered w-full bg-red-500/20 border-red-500/50 text-white placeholder-red-200 focus:border-red-400 focus:ring-2 focus:ring-red-400/20 transition-all"
                   required 
+                  disabled={loading}
                 />
                 <p className="text-xs text-slate-400 mt-2">Tu seras le modérateur de ce groupe.</p>
               </div>
@@ -177,31 +244,43 @@ const RegisterPage = () => {
                 <select 
                   className="select select-bordered w-full bg-slate-700/50 backdrop-blur-sm border-slate-600/50 text-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-400/20 transition-all"
                   value={selectedGroupId}
-                  onChange={(e) => {
-                    console.log('Groupe sélectionné:', e.target.value);
-                    setSelectedGroupId(e.target.value);
-                  }}
+                  onChange={(e) => setSelectedGroupId(e.target.value)}
                   required
+                  disabled={loading}
                 >
                   <option value="" disabled>-- Choisis un groupe à rejoindre --</option>
                   {groups.map(g => (
                     <option key={g.id} value={g.id}>
-                      {g.name} (ID: {g.id})
+                      <SecureText>{g.name}</SecureText>
                     </option>
                   ))}
                 </select>
+              </div>
+            )}
+
+            {error && (
+              <div className="bg-red-500/20 border border-red-500/30 rounded-lg p-3 backdrop-blur-sm">
+                <span className="text-red-200 text-sm">
+                  <SecureText>{error}</SecureText>
+                </span>
               </div>
             )}
             
             <button 
               type="submit" 
               className="btn w-full bg-linear-to-r from-indigo-500/80 to-purple-600/80 backdrop-blur-sm border-indigo-500/30 shadow-lg text-white hover:from-indigo-400/80 hover:to-purple-500/80 transition-all duration-300"
+              disabled={loading}
             >
-              {isModerator ? '🎯 Créer mon espace' : "📝 M'inscrire"}
+              {loading ? (
+                'Inscription...'
+              ) : isModerator ? (
+                '🎯 Créer mon espace sécurisé'
+              ) : (
+                "📝 M'inscrire de façon sécurisée"
+              )}
             </button>
           </form>
 
-          {/* Séparateur avec effet glass */}
           <div className="border-t border-slate-600/50 pt-6 text-center mt-8">
             <p className="text-sm text-slate-300 mb-3">
               Déjà un compte ?

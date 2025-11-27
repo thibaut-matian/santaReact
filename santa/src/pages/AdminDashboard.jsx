@@ -1,10 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api'; 
+import { SecureText } from '../components/SecureText';
+import { useSecureStorage } from '../components/SecureText';
+import { SecurityUtils } from '../utils/security';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  const currentUser = JSON.parse(localStorage.getItem('currentUser')) || { name: 'Admin' };
+  
+  // ✅ SÉCURITÉ : Stockage sécurisé
+  const { getSecureItem, removeSecureItem } = useSecureStorage();
+  const currentUser = getSecureItem('currentUser') || { name: 'Admin' };
 
   // --- ÉTATS ---
   const [users, setUsers] = useState([]);
@@ -16,18 +22,12 @@ const AdminDashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        console.log('🔍 Chargement des données admin...');
-        
         // 1. Charger les données de base (sans _expand)
         const [usersRes, groupsRes, partsRes] = await Promise.all([
           api.get('/users'),
           api.get('/groups'), 
-          api.get('/participants') // ← SANS _expand !
+          api.get('/participants')
         ]);
-
-        console.log('👥 Users:', usersRes.data.length);
-        console.log('📂 Groups:', groupsRes.data.length);
-        console.log('🎯 Participants:', partsRes.data.length);
 
         // 2. Enrichir les participants avec les infos user MANUELLEMENT
         const participantsWithUsers = await Promise.all(
@@ -40,7 +40,6 @@ const AdminDashboard = () => {
                 user: userRes.data
               };
             } catch (error) {
-              console.error(`❌ User ${participant.userId} non trouvé:`, error);
               return {
                 ...participant,
                 user: { name: 'Utilisateur supprimé', email: 'N/A' }
@@ -49,15 +48,12 @@ const AdminDashboard = () => {
           })
         );
 
-        console.log('✅ Participants enrichis:', participantsWithUsers.length);
-
         setUsers(usersRes.data);
         setGroups(groupsRes.data);
-        setParticipants(participantsWithUsers); // ← Avec les infos user !
+        setParticipants(participantsWithUsers);
         setLoading(false);
 
       } catch (error) {
-        console.error("❌ Erreur de chargement Admin:", error);
         setLoading(false);
       }
     };
@@ -65,7 +61,8 @@ const AdminDashboard = () => {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('currentUser');
+    // ✅ SÉCURITÉ : Nettoyage sécurisé
+    removeSecureItem('currentUser');
     navigate('/');
   };
 
@@ -89,8 +86,6 @@ const AdminDashboard = () => {
       try {
         await api.delete(`/groups/${groupId}`);
         setGroups(groups.filter(g => g.id !== groupId));
-        // Idéalement, il faudrait aussi nettoyer les participants orphelins, 
-        // mais json-server ne fait pas de cascade delete automatique.
       } catch (error) {
         alert("Erreur suppression groupe");
       }
@@ -115,7 +110,9 @@ const AdminDashboard = () => {
           </button>
         </div>
         <div className="flex-none gap-4">
-          <span className="badge badge-primary">{currentUser.name}</span>
+          <span className="badge badge-primary">
+            <SecureText>{currentUser.name}</SecureText>
+          </span>
           <button onClick={handleLogout} className="btn btn-ghost btn-sm text-error">Déconnexion</button>
         </div>
       </nav>
@@ -125,7 +122,7 @@ const AdminDashboard = () => {
         {/* --- SECTION 1 : VUE PAR GROUPES (Ce que tu voulais) --- */}
         <section>
           <h2 className="text-3xl font-bold text-white mb-6 flex items-center gap-2">
-            📂 Gestion des Groupes & Membres
+            📁 Gestion des Groupes & Membres
           </h2>
 
           <div className="grid gap-4">
@@ -145,10 +142,12 @@ const AdminDashboard = () => {
                             {/* Titre de l'accordéon (Le Groupe) */}
                             <div className="collapse-title text-xl font-medium text-white flex justify-between items-center pr-10">
                                 <div>
-                                    <span className="text-indigo-400 font-bold mr-2">#{group.id}</span>
-                                    {group.name}
+                                    <span className="text-indigo-400 font-bold mr-2">
+                                      #{SecurityUtils.maskId(group.id)}
+                                    </span>
+                                    <SecureText>{group.name}</SecureText>
                                     <span className="text-sm font-normal text-gray-400 ml-3">
-                                        (Modo: {moderator ? moderator.name : 'Inconnu'})
+                                        (Modo: <SecureText>{moderator ? moderator.name : 'Inconnu'}</SecureText>)
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-3 z-10">
@@ -179,16 +178,23 @@ const AdminDashboard = () => {
                                                 return (
                                                     <tr key={member.id} className="border-b border-white/5">
                                                         <td className="font-bold text-white">
-                                                            {member.user ? member.user.name : 'User supprimé'}
+                                                            <SecureText>
+                                                                {member.user ? member.user.name : 'User supprimé'}
+                                                            </SecureText>
                                                         </td>
-                                                        <td>{member.user?.email}</td>
+                                                        <td>
+                                                            <SecureText>{member.user?.email}</SecureText>
+                                                        </td>
                                                         <td>
                                                             {member.status === 'approved' ? <span className="text-green-400">Validé</span> : 
                                                              member.status === 'pending' ? <span className="text-orange-400">En attente</span> : 
                                                              <span className="text-red-400">Refusé</span>}
                                                         </td>
                                                         <td>
-                                                            {giftee ? <span className="text-indigo-300">🎁 {giftee.name}</span> : '-'}
+                                                            {giftee ? 
+                                                                <span className="text-indigo-300">
+                                                                    🎁 <SecureText>{giftee.name}</SecureText>
+                                                                </span> : '-'}
                                                         </td>
                                                     </tr>
                                                 );
@@ -203,7 +209,7 @@ const AdminDashboard = () => {
                                         onClick={() => handleDeleteGroup(group.id)}
                                         className="btn btn-sm btn-error btn-outline"
                                     >
-                                        Supprimer ce groupe
+                                        🗑️ Supprimer ce groupe
                                     </button>
                                 </div>
                             </div>
@@ -214,11 +220,10 @@ const AdminDashboard = () => {
           </div>
         </section>
 
-
         {/* --- SECTION 2 : ANNUAIRE GLOBAL (Pour info) --- */}
         <section className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/5 shadow-xl opacity-80 hover:opacity-100 transition-opacity">
           <h2 className="text-xl font-bold text-white mb-4">
-            🌍 Annuaire Global ({users.length} comptes)
+            🌐 Annuaire Global ({users.length} comptes)
           </h2>
           <div className="overflow-x-auto max-h-64 overflow-y-auto">
             <table className="table table-pin-rows text-white w-full">
@@ -226,6 +231,7 @@ const AdminDashboard = () => {
                 <tr className="text-slate-400 bg-slate-900">
                   <th>ID</th>
                   <th>Nom</th>
+                  <th>Email</th>
                   <th>Rôle</th>
                   <th>Action</th>
                 </tr>
@@ -233,16 +239,32 @@ const AdminDashboard = () => {
               <tbody>
                 {users.map((user) => (
                   <tr key={user.id} className="hover:bg-white/5 border-b border-white/10">
-                    <td>#{user.id}</td>
-                    <td>{user.name}</td>
-                    <td>{user.role}</td>
+                    <td>
+                      <SecureText>{SecurityUtils.maskId(user.id)}</SecureText>
+                    </td>
+                    <td>
+                      <SecureText>{user.name}</SecureText>
+                    </td>
+                    <td>
+                      <SecureText>{user.email}</SecureText>
+                    </td>
+                    <td>
+                      <span className={`badge ${
+                        user.role === 'admin' ? 'badge-error' :
+                        user.role === 'moderator' ? 'badge-warning' : 
+                        'badge-neutral'
+                      }`}>
+                        <SecureText>{user.role}</SecureText>
+                      </span>
+                    </td>
                     <td>
                       <button 
                         className="btn btn-xs btn-ghost text-error"
                         onClick={() => handleDeleteUser(user.id)}
                         disabled={user.role === 'admin'} 
+                        title={user.role === 'admin' ? 'Impossible de supprimer un admin' : 'Supprimer cet utilisateur'}
                       >
-                        ✖
+                        {user.role === 'admin' ? '🔒' : '🗑️'}
                       </button>
                     </td>
                   </tr>

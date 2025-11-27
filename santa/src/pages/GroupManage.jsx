@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import { SecureText } from '../components/SecureText';
+import { useSecureStorage } from '../components/SecureText';
 
 const GroupManage = () => {
     const { groupId } = useParams();
     const navigate = useNavigate();
+
+    const { removeSecureItem } = useSecureStorage();
 
     const [group, setGroup] = useState(null);
     const [participants, setParticipants] = useState([]);
@@ -13,43 +17,26 @@ const GroupManage = () => {
 
     useEffect(() => {
         const fetchData = async () => {
-            console.log('🔍 Chargement du groupe:', groupId);
-            
             try {
-                // 1. Charger le groupe
                 const groupRes = await api.get(`/groups/${groupId}`);
                 setGroup(groupRes.data);
-                console.log('✅ Groupe chargé:', groupRes.data);
 
-                // 2. Charger les participants de ce groupe
                 const partsRes = await api.get(`/participants?groupId=${groupId}`);
                 let participantsData = partsRes.data;
-                
-                console.log('📊 Participants bruts:', participantsData);
 
-                // 3. Filtrer les participants valides
-                participantsData = participantsData.filter(p => {
-                    const isValid = p.userId && p.userId !== null && p.userId !== 'null';
-                    if (!isValid) {
-                        console.warn('❌ Participant invalide ignoré:', p);
-                    }
-                    return isValid;
-                });
+                participantsData = participantsData.filter(p => 
+                    p.userId && p.userId !== null && p.userId !== 'null'
+                );
 
-                console.log('✅ Participants valides:', participantsData);
-
-                // 4. Récupérer les infos des utilisateurs
                 const participantsWithUsers = await Promise.all(
                     participantsData.map(async (participant) => {
                         try {
                             const userRes = await api.get(`/users/${participant.userId}`);
-                            console.log(`✅ User ${participant.userId}:`, userRes.data);
                             return {
                                 ...participant,
                                 user: userRes.data
                             };
                         } catch (error) {
-                            console.error(`❌ Erreur user ${participant.userId}:`, error);
                             return {
                                 ...participant,
                                 user: { name: 'Utilisateur introuvable', email: 'N/A' }
@@ -58,11 +45,9 @@ const GroupManage = () => {
                     })
                 );
 
-                console.log('🎯 Participants finaux:', participantsWithUsers);
                 setParticipants(participantsWithUsers);
                 setLoading(false);
             } catch (error) {
-                console.error("❌ Erreur chargement groupe:", error);
                 setLoading(false);
             }
         };
@@ -71,8 +56,6 @@ const GroupManage = () => {
     }, [groupId]);
 
     const handleStatusChange = async (participantId, newStatus) => {
-        console.log('🔍 Changement de statut:', participantId, '->', newStatus);
-        
         try {
             if (newStatus === 'rejected') {
                 if (!window.confirm("Refuser ce participant ?")) return;
@@ -81,31 +64,23 @@ const GroupManage = () => {
                 setParticipants(participants.filter(p => p.id !== participantId));
                 
             } else if (newStatus === 'approved') {
-                console.log('✅ Validation participation:', participantId);
-                
                 const currentParticipant = participants.find(p => p.id === participantId);
                 
-                const response = await api.put(`/participants/${participantId}`, {
+                await api.put(`/participants/${participantId}`, {
                     ...currentParticipant,
                     status: newStatus
                 });
-                
-                console.log('📡 Réponse serveur:', response.data);
                 
                 // Mise à jour locale
                 setParticipants(participants.map(p =>
                     p.id === participantId ? { ...p, status: newStatus } : p
                 ));
-                
-                console.log('🎉 Participant validé avec succès !');
             }
         } catch (error) {
-            console.error('❌ ERREUR lors du changement de statut:', error);
             alert(`Erreur: ${error.message}`);
         }
     };
 
-    // Fonction pour lancer le tirage au sort
     const handleDraw = async () => {
         const approved = participants.filter(p => p.status === 'approved');
         
@@ -121,35 +96,22 @@ const GroupManage = () => {
         setDrawLoading(true);
 
         try {
-            console.log('🎲 === DÉBUT DU TIRAGE AU SORT ===');
-            console.log('👥 Participants approuvés:', approved.length);
-            
-            // 1. Lister tous les participants
-            approved.forEach((p, i) => {
-                console.log(`${i + 1}. ${p.user?.name} (userId: ${p.userId}, participantId: ${p.id})`);
-            });
-
             // 2. Remettre à zéro TOUTES les assignations
-            console.log('🔄 Remise à zéro des assignations...');
-            
             for (let i = 0; i < approved.length; i++) {
                 const participant = approved[i];
-                console.log(`🔄 Reset ${i + 1}/${approved.length}: ${participant.user?.name}`);
                 
                 try {
                     await api.put(`/participants/${participant.id}`, {
                         ...participant,
                         gifteeId: null
                     });
-                    console.log(`✅ Reset OK pour ${participant.user?.name}`);
                 } catch (error) {
-                    console.error(`❌ Erreur reset ${participant.user?.name}:`, error);
+                    // Continuer même en cas d'erreur
                 }
             }
 
             // 3. Créer la liste des userIds
             const userIds = approved.map(p => p.userId);
-            console.log('📋 UserIds:', userIds);
             
             // 4. Mélanger la liste
             const shuffled = [...userIds];
@@ -157,7 +119,6 @@ const GroupManage = () => {
                 const j = Math.floor(Math.random() * (i + 1));
                 [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
             }
-            console.log('🎲 UserIds mélangés:', shuffled);
 
             // 5. Créer TOUTES les assignations (algorithme circulaire)
             const assignments = [];
@@ -166,22 +127,15 @@ const GroupManage = () => {
                 const receiverId = shuffled[(i + 1) % shuffled.length];
                 
                 assignments.push({ giverId, receiverId });
-                console.log(`🎁 Assignation ${i + 1}/${shuffled.length}: ${giverId} → ${receiverId}`);
             }
             
-            console.log('🎯 TOUTES les assignations créées:', assignments.length);
-            
-            // 6. VÉRIFICATION obligatoire
             if (assignments.length !== approved.length) {
-                console.error('❌ ERREUR: Nombre d\'assignations incorrect !');
-                console.log(`Expected: ${approved.length}, Got: ${assignments.length}`);
                 alert('Erreur dans le nombre d\'assignations');
                 setDrawLoading(false);
                 return;
             }
 
-            // 7. Sauvegarder UNE PAR UNE avec vérification
-            console.log('💾 === SAUVEGARDE DES ASSIGNATIONS ===');
+$
             let successCount = 0;
             let errorCount = 0;
             
@@ -190,65 +144,54 @@ const GroupManage = () => {
                 const participant = approved.find(p => p.userId === giverId);
                 
                 if (!participant) {
-                    console.error(`❌ Participant non trouvé pour userId: ${giverId}`);
                     errorCount++;
                     continue;
                 }
                 
-                console.log(`💾 Sauvegarde ${i + 1}/${assignments.length}: ${participant.user?.name} (${giverId}) → ${receiverId}`);
-                
                 try {
-                    const response = await api.put(`/participants/${participant.id}`, {
+                    await api.put(`/participants/${participant.id}`, {
                         id: participant.id,
                         userId: participant.userId,
                         groupId: participant.groupId,
                         status: participant.status,
-                        gifteeId: receiverId  // ← L'assignation
+                        gifteeId: receiverId  
                     });
                     
-                    console.log(`✅ Sauvegarde OK pour ${participant.user?.name}:`, response.data);
                     successCount++;
                     
-                    // Petite pause entre les requêtes
                     await new Promise(resolve => setTimeout(resolve, 100));
                     
                 } catch (error) {
-                    console.error(`❌ Erreur sauvegarde ${participant.user?.name}:`, error);
-                    console.error('📊 Détails:', error.response?.data);
                     errorCount++;
                 }
             }
-            
-            console.log(`📊 Résultat sauvegarde: ${successCount} réussies, ${errorCount} échouées`);
             
             if (errorCount > 0) {
                 alert(`Attention: ${errorCount} assignations ont échoué sur ${assignments.length}`);
             }
 
-            // 8. Marquer le groupe comme terminé
-            console.log('🏁 Finalisation du tirage...');
             await api.put(`/groups/${groupId}`, {
                 ...group,
                 isDrawDone: true,
                 status: 'drawn'
             });
 
-            console.log('🎉 === TIRAGE TERMINÉ ===');
-            console.log(`✅ ${successCount}/${approved.length} participants assignés`);
-            
             alert(`Tirage terminé ! ${successCount} assignations sur ${approved.length} participants.`);
             
-            // Recharger la page pour voir les résultats
             setTimeout(() => {
                 window.location.reload();
             }, 1000);
 
         } catch (error) {
-            console.error('❌ Erreur générale tirage:', error);
             alert(`Erreur générale: ${error.message}`);
         } finally {
             setDrawLoading(false);
         }
+    };
+
+    const handleLogout = () => {
+        removeSecureItem('currentUser');
+        navigate('/');
     };
 
     if (loading) {
@@ -273,7 +216,7 @@ const GroupManage = () => {
                 <div className="max-w-5xl mx-auto px-4 py-6 flex justify-between items-center">
                     <h1 className="text-3xl font-bold text-white">🎅 Gestion du groupe</h1>
                     <button 
-                        onClick={() => navigate('/')} 
+                        onClick={handleLogout} 
                         className="btn btn-ghost text-slate-300"
                     >
                         Se déconnecter
@@ -285,7 +228,9 @@ const GroupManage = () => {
                 
                 {group && (
                     <div className="bg-slate-800/40 backdrop-blur-md rounded-2xl p-6 border border-slate-700/50 shadow-xl">
-                        <h2 className="text-2xl font-bold text-white mb-4">{group.name}</h2>
+                        <h2 className="text-2xl font-bold text-white mb-4">
+                            <SecureText>{group.name}</SecureText>
+                        </h2>
                         <p className="text-slate-300">Modérateur: Vous</p>
                         <p className="text-slate-300">Statut: {group.isDrawDone ? '✅ Tirage effectué' : '⏳ En cours'}</p>
                         <p className="text-slate-300">Participants: {participants.length} total</p>
@@ -313,8 +258,12 @@ const GroupManage = () => {
                                 <tbody>
                                     {pending.map((p) => (
                                         <tr key={p.id} className="border-b border-white/5">
-                                            <td className="font-bold">{p.user?.name || 'Nom introuvable'}</td>
-                                            <td>{p.user?.email || 'Email introuvable'}</td>
+                                            <td className="font-bold">
+                                                <SecureText>{p.user?.name || 'Nom introuvable'}</SecureText>
+                                            </td>
+                                            <td>
+                                                <SecureText>{p.user?.email || 'Email introuvable'}</SecureText>
+                                            </td>
                                             <td className="space-x-2">
                                                 <button
                                                     onClick={() => handleStatusChange(p.id, 'approved')}
@@ -341,7 +290,7 @@ const GroupManage = () => {
                 <section className="bg-green-600/10 backdrop-blur-md rounded-2xl p-6 border border-green-500/20 shadow-xl">
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="text-2xl font-bold text-green-200 flex items-center gap-2">
-                            ✅ Participants validés ({approved.length})
+                             Participants validés ({approved.length})
                         </h2>
                         
                         <button
@@ -350,11 +299,11 @@ const GroupManage = () => {
                             disabled={approved.length < 2 || drawLoading || group?.isDrawDone}
                         >
                             {drawLoading ? (
-                                <>🔄 Tirage en cours...</>
+                                <> Tirage en cours...</>
                             ) : group?.isDrawDone ? (
-                                <>✅ Tirage effectué</>
+                                <> Tirage effectué</>
                             ) : (
-                                <>🎁 Lancer le tirage au sort !</>
+                                <> Lancer le tirage au sort !</>
                             )}
                         </button>
                     </div>
@@ -375,8 +324,12 @@ const GroupManage = () => {
                                 <tbody>
                                     {approved.map((p) => (
                                         <tr key={p.id} className="border-b border-white/5">
-                                            <td className="font-bold">{p.user?.name}</td>
-                                            <td>{p.user?.email}</td>
+                                            <td className="font-bold">
+                                                <SecureText>{p.user?.name}</SecureText>
+                                            </td>
+                                            <td>
+                                                <SecureText>{p.user?.email}</SecureText>
+                                            </td>
                                             <td><span className="badge badge-success">Validé</span></td>
                                             {group?.isDrawDone && (
                                                 <td>

@@ -2,21 +2,23 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { loginUser } from '../services/api.jsx';
+import { SecurityUtils } from '../utils/security.js';
+import { useSecureStorage } from '../components/SecureText.jsx';
 import api from '../services/api';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const [buttonPosition, setButtonPosition] = useState({ x: 0, y: 0 });
   const navigate = useNavigate();
+  const { setSecureItem } = useSecureStorage();
 
-  // Fonction pour vérifier si les champs de connexion sont vides
   const areLoginFieldsEmpty = () => {
     return email.trim() === "" || password.trim() === "";
   };
 
-  // Vérification automatique pour remettre le bouton en place quand les champs sont remplis
   useEffect(() => {
     if (!areLoginFieldsEmpty()) {
       setButtonPosition({ x: 0, y: 0 });
@@ -26,12 +28,13 @@ const LoginPage = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
 
     try {
       const user = await loginUser(email, password);
 
       if (user) {
-        localStorage.setItem('currentUser', JSON.stringify(user));
+        setSecureItem('currentUser', user);
         
         if (user.role === 'admin') {
           navigate('/admin');
@@ -45,7 +48,6 @@ const LoginPage = () => {
               setError('Aucun groupe trouvé pour ce modérateur.');
             }
           } catch (err) {
-            console.error('Erreur recherche groupe:', err);
             setError('Erreur lors de la recherche du groupe.');
           }
         } else {
@@ -55,22 +57,20 @@ const LoginPage = () => {
               const myParticipation = participantsRes.data[0];
               navigate(`/group/${myParticipation.groupId}`);
             } else {
-              setError('Vous n\'êtes inscrit dans aucun groupe.');
+              navigate('/group/101');
             }
           } catch (err) {
-            console.error('Erreur recherche participation:', err);
             navigate('/group/101');
           }
         }
-      } else {
-        setError('Email ou mot de passe incorrect.');
       }
     } catch (err) {
-      setError('Erreur de connexion au serveur.');
+      setError(err.message || 'Erreur de connexion.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Logique du bouton fuyant - équivalent de setupFleeingButtonEffect
   const handleButtonMouseOver = () => {
     if (areLoginFieldsEmpty()) {
       const randomX = Math.random() * 300 - 150; // Entre -150px et +150px
@@ -80,13 +80,27 @@ const LoginPage = () => {
     }
   };
 
+  const handleEmailChange = (e) => {
+    const value = e.target.value;
+    if (value.length <= 254) {
+      setEmail(SecurityUtils.sanitize(value));
+    }
+  };
+  
+  const handlePasswordChange = (e) => {
+    const value = e.target.value;
+    if (value.length <= 100) {
+      setPassword(SecurityUtils.sanitize(value));
+    }
+  };
+
   return (
     <div className="min-h-screen text-slate-200 flex items-center justify-center px-4 bg-linear-to-br from-slate-900 via-slate-800 to-indigo-900">
       
-      {/* Card principal avec effet liquid glass */}
+     
       <div className="bg-slate-800/40 backdrop-blur-md border border-slate-700/50 shadow-2xl rounded-2xl p-8 max-w-md w-full relative overflow-hidden">
         
-        {/* Effet de brillance liquide */}
+       
         <div className="absolute inset-0 bg-linear-to-br from-white/5 via-transparent to-transparent rounded-2xl pointer-events-none"></div>
         <div className="absolute top-0 left-1/4 w-32 h-32 bg-indigo-500/10 rounded-full blur-xl"></div>
         <div className="absolute bottom-0 right-1/4 w-24 h-24 bg-purple-500/10 rounded-full blur-xl"></div>
@@ -97,7 +111,7 @@ const LoginPage = () => {
             <h1 className="text-4xl font-bold text-white mb-2 drop-shadow-lg">
               🎅 Secret Santa
             </h1>
-            <h3 className="text-xl text-slate-300 font-medium">Connexion</h3>
+            <h3 className="text-xl text-slate-300 font-medium">Connexion Sécurisée</h3>
           </div>
           
           <form onSubmit={handleLogin} className="space-y-6">
@@ -107,9 +121,12 @@ const LoginPage = () => {
                 type="email" 
                 placeholder="Email" 
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={handleEmailChange}
+                maxLength="254"
                 className="input input-bordered w-full bg-slate-700/50 backdrop-blur-sm border-slate-600/50 text-white placeholder-slate-400 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-400/20 transition-all"
                 required
+                disabled={loading}
+                autoComplete="email"
               />
             </div>
             
@@ -119,15 +136,18 @@ const LoginPage = () => {
                 type="password" 
                 placeholder="Mot de passe" 
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={handlePasswordChange}
+                maxLength="100"
                 className="input input-bordered w-full bg-slate-700/50 backdrop-blur-sm border-slate-600/50 text-white placeholder-slate-400 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-400/20 transition-all"
                 required
+                disabled={loading}
+                autoComplete="current-password"
               />
             </div>
             
             {error && (
               <div className="bg-red-500/20 border border-red-500/30 rounded-lg p-3 backdrop-blur-sm">
-                <span className="text-red-200 text-sm">{error}</span>
+                <span className="text-red-200 text-sm">{SecurityUtils.sanitize(error)}</span>
               </div>
             )}
             
@@ -140,15 +160,16 @@ const LoginPage = () => {
                   areLoginFieldsEmpty() 
                     ? 'bg-red-500' 
                     : 'bg-linear-to-r from-blue-500/80 to-blue-700/80'
-                }`}
+                } ${loading ? 'loading' : ''}`}
                 onMouseOver={handleButtonMouseOver}
                 style={{
                   position: 'relative',
                   transform: `translate(${buttonPosition.x}px, ${buttonPosition.y}px)`,
                   transition: 'transform 0.3s ease-out',
                 }}
+                disabled={loading}
               >
-                {areLoginFieldsEmpty() ? "Remplis d'abord !" : '✨ Entrer'}
+                {loading ? 'Connexion...' : areLoginFieldsEmpty() ? "Remplis d'abord !" : ' Connexion Sécurisée'}
               </button>
             </div>
           </form>
@@ -156,7 +177,7 @@ const LoginPage = () => {
           {areLoginFieldsEmpty() && (
             <div className="text-center mb-6 mt-4">
               <p className="text-sm text-slate-400 italic opacity-75">
-                💡 Remplis les champs pour que le bouton arrête de fuir !
+                 Remplis les champs pour que le bouton arrête de fuir !
               </p>
             </div>
           )}
@@ -170,7 +191,7 @@ const LoginPage = () => {
               to="/register" 
               className="btn btn-ghost btn-sm text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 transition-all duration-300 backdrop-blur-sm border border-indigo-500/20"
             >
-              ✨ Créer un espace ou rejoindre
+              ✨ Créer un compte sécurisé
             </Link>
           </div>
         </div>
