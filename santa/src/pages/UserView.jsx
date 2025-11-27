@@ -68,7 +68,7 @@ const UserView = () => {
   const handleOpenGift = () => {
     setIsOpened(true);
     
-    const audio = new Audio('./MariahCarey.mp3'); 
+    const audio = new Audio('../MariahCarey.mp3'); 
     audio.volume = 0.5;
     audio.play().catch(error => {
     });
