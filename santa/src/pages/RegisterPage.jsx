@@ -8,17 +8,14 @@ import { SecurityUtils } from '../utils/security';
 const RegisterPage = () => {
   const navigate = useNavigate();
   const [groups, setGroups] = useState([]);
-  
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  
   const [isModerator, setIsModerator] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
   const [selectedGroupId, setSelectedGroupId] = useState('');
-
   const { setSecureItem } = useSecureStorage();
 
   useEffect(() => {
@@ -156,7 +153,6 @@ const RegisterPage = () => {
       
       <div className="bg-slate-800/40 backdrop-blur-md border border-slate-700/50 shadow-2xl rounded-2xl p-8 max-w-md w-full relative overflow-hidden">
         
-        {/* Effet de brillance liquide */}
         <div className="absolute inset-0 bg-linear-to-br from-white/5 via-transparent to-transparent rounded-2xl pointer-events-none"></div>
         <div className="absolute top-0 left-1/4 w-32 h-32 bg-indigo-500/10 rounded-full blur-xl"></div>
         <div className="absolute bottom-0 right-1/4 w-24 h-24 bg-purple-500/10 rounded-full blur-xl"></div>
@@ -164,7 +160,7 @@ const RegisterPage = () => {
         <div className="relative z-10">
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold text-white mb-2 drop-shadow-lg">
-              📝 Inscription Sécurisée
+               Inscription 
             </h1>
           </div>
           
@@ -274,9 +270,9 @@ const RegisterPage = () => {
               {loading ? (
                 'Inscription...'
               ) : isModerator ? (
-                '🎯 Créer mon espace sécurisé'
+                ' Créer mon espace sécurisé'
               ) : (
-                "📝 M'inscrire de façon sécurisée"
+                " M'inscrire de façon sécurisée"
               )}
             </button>
           </form>
@@ -289,7 +285,7 @@ const RegisterPage = () => {
               to="/" 
               className="btn btn-ghost btn-sm text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 transition-all duration-300 backdrop-blur-sm border border-indigo-500/20"
             >
-              🔑 Connexion
+               Connexion
             </Link>
           </div>
         </div>

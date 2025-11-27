@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { SecureText } from '../components/SecureText';
 import { useSecureStorage } from '../components/SecureText';
-
+import './UserView.css'; 
 
 const UserView = () => {
   const { groupId } = useParams();
@@ -161,7 +161,6 @@ const UserView = () => {
                   </p>
                 </div>
 
-                {/* Informations supplémentaires sécurisées */}
                 {giftee?.email && (
                   <div className="bg-blue-50 p-3 rounded-xl mt-3">
                     <p className="text-blue-800 text-xs">
@@ -174,7 +173,6 @@ const UserView = () => {
           </div>
         )}
 
-        {/* Message d'erreur générique */}
         {status === 'loading' && (
           <div className="flex flex-col items-center">
             <div className="loading loading-spinner loading-lg text-primary mb-4"></div>
