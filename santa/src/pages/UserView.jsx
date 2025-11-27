@@ -77,18 +77,18 @@ const UserView = () => {
   if (loading) return <div className="min-h-screen bg-slate-900 flex items-center justify-center text-white">Chargement de la magie...</div>;
 
   return (
-    <div className="christmas-bg flex flex-col items-center justify-center min-h-screen relative p-4">
+     <div className="christmas-bg flex flex-col items-center justify-center min-h-screen relative p-4">
       
-     
-      <div className="snowflake">❄</div><div className="snowflake">❅</div>
-      <div className="snowflake">❆</div><div className="snowflake">❄</div>
-      <div className="snowflake">❅</div><div className="snowflake">❆</div>
-      <div className="snowflake">❄</div>
+      {/* Décor non interactif pour ne pas bloquer les clics */}
+      <div className="snowflake pointer-events-none">❄</div><div className="snowflake pointer-events-none">❅</div>
+      <div className="snowflake pointer-events-none">❆</div><div className="snowflake pointer-events-none">❄</div>
+      <div className="snowflake pointer-events-none">❅</div><div className="snowflake pointer-events-none">❆</div>
+      <div className="snowflake pointer-events-none">❄</div>
 
-      
-      <nav className="absolute top-0 left-0 w-full p-6 flex justify-between z-10 text-white">
+      {/* Nav au-dessus de tout pour capter les clics */}
+      <nav className="absolute top-0 left-0 w-full p-6 flex justify-between z-50 text-white">
         <h1 className="text-xl font-bold"> Secret Santa</h1>
-        <button onClick={handleLogout} className="btn btn-ghost btn-sm">Déconnexion sécurisée</button>
+        <button onClick={handleLogout} className="btn btn-ghost btn-sm">Déconnexion</button>
       </nav>
 
       
@@ -115,7 +115,7 @@ const UserView = () => {
 
         {status === 'pending' && (
           <div className="alert alert-warning shadow-lg">
-            <span>⏳ Ton inscription est en attente de validation par le modérateur.</span>
+            <span> Ton inscription est en attente de validation par le modérateur.</span>
           </div>
         )}
 
