@@ -135,7 +135,6 @@ const GroupManage = () => {
                 return;
             }
 
-$
             let successCount = 0;
             let errorCount = 0;
             
@@ -215,10 +214,10 @@ $
             <header className="bg-slate-800/40 backdrop-blur-md border-b border-slate-700/50 shadow-xl">
                 <div className="max-w-5xl mx-auto px-4 py-6 flex justify-between items-center">
                     <h1 className="text-3xl font-bold text-white">🎅 Gestion du groupe</h1>
-                    <button 
+                    <button
                         onClick={handleLogout} 
                         className="btn btn-ghost text-slate-300"
-                    >
+                        >
                         Se déconnecter
                     </button>
                 </div>
