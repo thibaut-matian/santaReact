@@ -16,22 +16,48 @@ const AdminDashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // On lance les 3 requêtes en parallèle pour aller plus vite
+        console.log('🔍 Chargement des données admin...');
+        
+        // 1. Charger les données de base (sans _expand)
         const [usersRes, groupsRes, partsRes] = await Promise.all([
           api.get('/users'),
-          // On récupère les groupes (et on peut demander les infos du modérateur via expand si besoin, ici on fera le lien manuellement)
           api.get('/groups'), 
-          // On récupère TOUS les participants avec leurs infos utilisateur
-          api.get('/participants?_expand=user')
+          api.get('/participants') // ← SANS _expand !
         ]);
+
+        console.log('👥 Users:', usersRes.data.length);
+        console.log('📂 Groups:', groupsRes.data.length);
+        console.log('🎯 Participants:', partsRes.data.length);
+
+        // 2. Enrichir les participants avec les infos user MANUELLEMENT
+        const participantsWithUsers = await Promise.all(
+          partsRes.data.map(async (participant) => {
+            try {
+              // Récupérer les infos de l'utilisateur pour chaque participant
+              const userRes = await api.get(`/users/${participant.userId}`);
+              return {
+                ...participant,
+                user: userRes.data
+              };
+            } catch (error) {
+              console.error(`❌ User ${participant.userId} non trouvé:`, error);
+              return {
+                ...participant,
+                user: { name: 'Utilisateur supprimé', email: 'N/A' }
+              };
+            }
+          })
+        );
+
+        console.log('✅ Participants enrichis:', participantsWithUsers.length);
 
         setUsers(usersRes.data);
         setGroups(groupsRes.data);
-        setParticipants(partsRes.data);
+        setParticipants(participantsWithUsers); // ← Avec les infos user !
         setLoading(false);
 
       } catch (error) {
-        console.error("Erreur de chargement Admin", error);
+        console.error("❌ Erreur de chargement Admin:", error);
         setLoading(false);
       }
     };
