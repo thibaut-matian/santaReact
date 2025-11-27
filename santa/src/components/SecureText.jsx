@@ -20,6 +20,7 @@ export const useSecureStorage = () => {
       const jsonData = JSON.stringify(data);
       localStorage.setItem(key, jsonData);
     } catch (error) {
+      // Silencieux en production
     }
   };
   
@@ -33,5 +34,13 @@ export const useSecureStorage = () => {
     }
   };
   
-  return { setSecureItem, getSecureItem };
+  const removeSecureItem = (key) => {
+    try {
+      localStorage.removeItem(key);
+    } catch (error) {
+      // Silencieux en production
+    }
+  };
+  
+  return { setSecureItem, getSecureItem, removeSecureItem };
 };
