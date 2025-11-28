@@ -43,9 +43,7 @@ const UserView = () => {
           setStatus('pending');
         } else if (myParticipation.status === 'approved') {
           if (myParticipation.gifteeId) {
-            
             const gifteeRes = await api.get(`/users/${myParticipation.gifteeId}`);
-            
             setGiftee(gifteeRes.data);
             setStatus('draw_done');
           } else {
@@ -61,16 +59,22 @@ const UserView = () => {
 
     fetchUserStatus();
 
-    const interval = setInterval(fetchUserStatus, 3000);
+    const interval = setInterval(() => {
+      if (status !== 'draw_done' && status !== 'not_registered') {
+        fetchUserStatus();
+      }
+    }, 10000); 
+
     return () => clearInterval(interval);
-  }, [groupId, currentUser, navigate]);
+  }, [groupId, currentUser, navigate, status]); 
 
   const handleOpenGift = () => {
     setIsOpened(true);
     
-    const audio = new Audio('../MariahCarey.mp3'); 
+    const audio = new Audio('/MariahCarey.mp3'); 
     audio.volume = 0.5;
-    audio.play().catch(error => {
+    audio.play().catch(() => {
+      // Silencieux si échec
     });
   };
 
