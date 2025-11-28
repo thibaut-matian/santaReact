@@ -83,12 +83,6 @@ const UserView = () => {
 
   return (
      <div className="christmas-bg flex flex-col items-center justify-center min-h-screen relative p-4">
-      
-      {/* Décor non interactif pour ne pas bloquer les clics */}
-      <div className="snowflake pointer-events-none">❄</div><div className="snowflake pointer-events-none">❅</div>
-      <div className="snowflake pointer-events-none">❆</div><div className="snowflake pointer-events-none">❄</div>
-      <div className="snowflake pointer-events-none">❅</div><div className="snowflake pointer-events-none">❆</div>
-      <div className="snowflake pointer-events-none">❄</div>
 
       {/* Nav au-dessus de tout pour capter les clics */}
       <nav className="absolute top-0 left-0 w-full p-6 flex justify-between z-50 text-white">
