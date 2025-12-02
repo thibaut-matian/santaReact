@@ -109,7 +109,7 @@ const LoginPage = () => {
         <div className="relative z-10">
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold text-white mb-2 drop-shadow-lg">
-              🎅 Secret Santa
+               Secret Santa
             </h1>
             <h3 className="text-xl text-slate-300 font-medium">Connexion Sécurisée</h3>
           </div>
