@@ -61,17 +61,14 @@ const AdminDashboard = () => {
   }, []);
 
   const handleLogout = () => {
-    // ✅ SÉCURITÉ : Nettoyage sécurisé
     removeSecureItem('currentUser');
     navigate('/');
   };
 
-  // Suppression d'un utilisateur globalement
   const handleDeleteUser = async (id) => {
     if (window.confirm("Attention : Supprimer un utilisateur le retirera aussi de tous les groupes. Continuer ?")) {
       try {
         await api.delete(`/users/${id}`);
-        // Mise à jour locale de toutes les listes pour éviter de recharger
         setUsers(users.filter(u => u.id !== id));
         setParticipants(participants.filter(p => p.userId !== id));
       } catch (error) {
@@ -80,7 +77,6 @@ const AdminDashboard = () => {
     }
   };
 
-  // Suppression d'un groupe entier
   const handleDeleteGroup = async (groupId) => {
     if (window.confirm("Supprimer ce groupe et tout son historique de tirage ?")) {
       try {
@@ -92,7 +88,6 @@ const AdminDashboard = () => {
     }
   };
 
-  // Fonction utilitaire pour trouver les participants d'un groupe spécifique
   const getGroupMembers = (groupId) => {
     return participants.filter(p => p.groupId == groupId);
   };

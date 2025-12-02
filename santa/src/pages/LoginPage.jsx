@@ -191,7 +191,7 @@ const LoginPage = () => {
               to="/register" 
               className="btn btn-ghost btn-sm text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 transition-all duration-300 backdrop-blur-sm border border-indigo-500/20"
             >
-              ✨ Créer un compte sécurisé
+               Créer un compte sécurisé
             </Link>
           </div>
         </div>
